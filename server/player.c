@@ -45,7 +45,7 @@ void player_remove(player_t *player) {
     char *message = NULL;
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "Player (ID: %s) has disconnected!\n", player->id);
+    sprintf(log_message, "\t> Player %s (ID: %s) has disconnected!\n", player->nickname, player->id);
 
     pthread_mutex_lock(&g_player_list_mutex);
 
@@ -150,5 +150,5 @@ void player_add(player_t *player) {
         ptr->next_player = player;
     }
 
-    pthread_mutex_lock(&g_player_list_mutex);
+    pthread_mutex_unlock(&g_player_list_mutex);
 }

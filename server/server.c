@@ -67,7 +67,7 @@ void svr_connect(player_t *player, game_t *game) {
     svr_send(player->socket, message);
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
+    sprintf(log_message, "\t> Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
     write_log(log_message);
 
     game_send_player_info(game);
@@ -79,7 +79,6 @@ void svr_connect(player_t *player, game_t *game) {
 }
 
 /// Disconnects the player from its current game.
-///
 /// \param player
 /// \param game
 void svr_disconnect(player_t *player, game_t *game) {
@@ -197,7 +196,7 @@ void svr_broadcast(char *message) {
     if (!message)
         return;
 
-    printf("--->>> %s\n", message);
+    printf("--->>> %s", message);
 
     pthread_mutex_lock(&g_player_list_mutex);
     if (g_player_list != NULL) {
@@ -252,7 +251,7 @@ void *_svr_serve_recieving(void *arg) {
             bytes_received += read_size;
             messages_received++;
 
-            printf("<<<--- %s\n", cbuf);
+            printf("<<<--- %s", cbuf);
             _svr_process_request(cbuf);
             memset(cbuf, 0, 1024 * sizeof(char));
 
@@ -292,22 +291,22 @@ void *_svr_connection_handler(void *arg) {
     memset(msg, 0, strlen(msg));
 
     // Count stats.
-    bytes_received += recv(client_sock, msg, 64 * sizeof(char), 0);
+    bytes_received += recv(client_sock, msg, sizeof(char) * 64, 0);
     messages_received++;
 
     // Set socket params (receive timeout).
     setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout));
 
-    id = strtok(msg, ";,."); // Expecting message like "1;nickname;John".
+    id = strtok(msg, ";"); // Expecting message like "1;nickname;John;".
     if (id) {
-        tokens = strtok(NULL, ";,.");
+        tokens = strtok(NULL, ";");
     } else {
         messages_bad++;
     }
 
     // If the message from client contains nickname
     if (tokens != NULL && strcmp(tokens, "nickname") == 0) {
-        nickname = strtok(NULL, ";,.");
+        nickname = strtok(NULL, ";");
 
         if (!nickname) {
             nickname = memory_malloc(sizeof(char) * 10);
@@ -332,7 +331,7 @@ void *_svr_connection_handler(void *arg) {
 
         // Log.
         log_message = memory_malloc(sizeof(char) * 256);
-        sprintf(log_message, "\t> Player: %s connected! (ID: %s)\n", player->nickname, player->id);
+        sprintf(log_message, "\t> Player %s (ID: %s) connected!\n", player->nickname, player->id);
         write_log(log_message);
         memory_free(log_message);
     } else {
@@ -457,7 +456,7 @@ void _svr_process_request(char *message) {
 
     // List of events which server accepts from client side.
     if (tokens[1]) {
-        if (strcmp(tokens[1], "games") == 0) {
+        if (strcmp(tokens[1], "show_games") == 0) {
             game_broadcast_board_info();
         } else if (strcmp(tokens[1], "new_game") == 0) {
             game_create(player);
@@ -503,7 +502,7 @@ char **_svr_split_message(char *message) {
 /// Call this if incorrect message received.
 /// \param message      The message.
 void _svr_count_bad_message(char *message) {
-    printf("Ignored message: \"%s\".", message);
+    printf("\t> Ignored message: \"%s\".\n", message);
     messages_bad++;
 }
 

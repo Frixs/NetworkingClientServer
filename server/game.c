@@ -20,7 +20,7 @@ void game_broadcast_board_info() {
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "1;games");
+    sprintf(message, "1;show_games");
 
     pthread_mutex_lock(&g_game_list_mutex);
 
@@ -133,7 +133,7 @@ void game_create(player_t *player) {
         game->players[i] = NULL;
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "Game created (ID: %s)!\n", game->id);
+    sprintf(log_message, "\t> Game created (ID: %s)!\n", game->id);
     write_log(log_message);
 
     game_add(game);
@@ -180,7 +180,7 @@ void game_remove(game_t *game) {
     game_list_ptr = g_game_list;
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "Game removed (ID: %s)!\n", game->id);
+    sprintf(log_message, "\t> Game removed (ID: %s)!\n", game->id);
 
     pthread_mutex_lock(&g_game_list_mutex);
 

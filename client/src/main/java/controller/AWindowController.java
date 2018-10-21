@@ -44,6 +44,11 @@ public abstract class AWindowController {
                     pane = fxmlLoader.load();
                     ((ConnectionFormController) fxmlLoader.getController()).setWindowController(this);
                     break;
+                case LOBBY:
+                    fxmlLoader = new FXMLLoader(getClass().getResource("/main/resource/view/Lobby.fxml"));
+                    pane = fxmlLoader.load();
+                    ((LobbyController) fxmlLoader.getController()).setWindowController(this);
+                    break;
                 case GAME:
                     fxmlLoader = new FXMLLoader(getClass().getResource("/main/resource/view/Game.fxml"));
                     pane = fxmlLoader.load();

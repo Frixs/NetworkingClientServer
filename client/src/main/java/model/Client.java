@@ -5,7 +5,6 @@ import javafx.scene.control.ButtonType;
 import main.java.controller.AWindowController;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -74,10 +73,9 @@ public class Client implements INetwork, Runnable {
         // Create a new socket.
         try {
             this.socket = new Socket(this.hostAddress, this.port);
-            this.socket.setSoTimeout(60000);
+            this.socket.setSoTimeout(15000); // 15 sec.
 
-            InetAddress address = this.socket.getInetAddress();
-            System.out.println("Connecting to server (" + address.getHostAddress() + ") as " + nickname + ".");
+            System.out.println("Connecting to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + " ...");
 
             out = new PrintWriter(new OutputStreamWriter(this.socket.getOutputStream()));
             in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
@@ -110,6 +108,7 @@ public class Client implements INetwork, Runnable {
             return 3;
         }
 
+        System.out.println("Connected to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + "!");
         return 0;
     }
 
@@ -172,7 +171,7 @@ public class Client implements INetwork, Runnable {
                     timeout++;
 
                 } catch (SocketTimeoutException e) {
-                    sendMessage(new Message("games"));
+                    sendMessage(new Message("show_games"));
                 }
             } while (timeout < 2);
 
@@ -199,7 +198,7 @@ public class Client implements INetwork, Runnable {
         if (tokens.length > 0) {
             // List of events which client accepts from server side.
             switch (tokens[1]) {
-                case "games":
+                case "show_games":
                     reqListOfGames(tokens);
                     break;
                 default:
