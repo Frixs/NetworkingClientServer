@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.java.controller.GameController">
+   <children>
+      <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <top>
+            <AnchorPane prefHeight="25.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #dedede;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <right>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <ButtonBar buttonMinWidth="60.0" prefHeight="40.0" prefWidth="200.0">
+                                      <buttons>
+                                          <Button mnemonicParsing="false" onAction="#onActionLeaveBtn" text="LEAVE" />
+                                        <Button mnemonicParsing="false" onAction="#onActionQuitBtn" text="QUIT" />
+                                      </buttons>
+                                    </ButtonBar>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </StackPane>
+                           </children>
+                        </AnchorPane>
+                     </right>
+                     <left>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Text fx:id="gameNameT" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;GAME NAME (STATUS)&gt;" StackPane.alignment="CENTER_LEFT">
+                                       <StackPane.margin>
+                                          <Insets />
+                                       </StackPane.margin>
+                                    </Text>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </StackPane>
+                           </children>
+                        </AnchorPane>
+                     </left>
+                  </BorderPane>
+               </children>
+            </AnchorPane>
+         </top>
+         <center>
+            <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <top>
+                        <AnchorPane prefHeight="50.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <BorderPane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #aede80;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <center>
+                                    <AnchorPane prefHeight="200.0" BorderPane.alignment="CENTER">
+                                       <children>
+                                          <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <Text fx:id="scoreT" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font-weight: bold; -fx-font-size: 18px;" text="&lt;SCORE&gt;" />
+                                                <Text fx:id="goalT" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;GOAL&gt;">
+                                                   <StackPane.margin>
+                                                      <Insets top="30.0" />
+                                                   </StackPane.margin>
+                                                   <font>
+                                                      <Font size="10.0" />
+                                                   </font>
+                                                </Text>
+                                             </children>
+                                          </StackPane>
+                                       </children>
+                                    </AnchorPane>
+                                 </center>
+                                 <left>
+                                    <AnchorPane prefHeight="200.0" BorderPane.alignment="CENTER">
+                                       <children>
+                                          <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <Text fx:id="p1NicknameT" fill="#1083d0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P1 NICKNAME&gt;" />
+                                             </children>
+                                          </StackPane>
+                                       </children>
+                                    </AnchorPane>
+                                 </left>
+                                 <right>
+                                    <AnchorPane prefHeight="400.0" BorderPane.alignment="CENTER">
+                                       <children>
+                                          <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <Text fx:id="p2NicknameT" fill="#d01b1b" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P2 NICKNAME&gt;" />
+                                             </children>
+                                          </StackPane>
+                                       </children>
+                                    </AnchorPane>
+                                 </right>
+                              </BorderPane>
+                           </children>
+                        </AnchorPane>
+                     </top>
+                     <center>
+                        <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font-weight: bold;" text="VS">
+                                 <font>
+                                    <Font size="20.0" />
+                                 </font>
+                              </Text>
+                           </children>
+                        </StackPane>
+                     </center>
+                     <right>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <StackPane maxHeight="150.0" maxWidth="150.0" prefHeight="150.0" prefWidth="150.0" style="-fx-background-color: #dedede;">
+                                       <children>
+                                          <ImageView fx:id="p2ChoiceIW" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
+                                       </children>
+                                    </StackPane>
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </AnchorPane>
+                     </right>
+                     <left>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <StackPane maxHeight="150.0" maxWidth="150.0" prefHeight="150.0" prefWidth="150.0" style="-fx-background-color: #dedede;">
+                                       <children>
+                                          <ImageView fx:id="p1ChoiceIW" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
+                                       </children>
+                                    </StackPane>
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </AnchorPane>
+                     </left>
+                     <bottom>
+                        <AnchorPane prefHeight="95.0" prefWidth="200.0" style="-fx-background-color: #dedede;" BorderPane.alignment="CENTER">
+                           <children>
+                              <StackPane fx:id="yourTurnPane" prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <ButtonBar buttonMinWidth="75.0" maxWidth="-Infinity" prefHeight="75.0" prefWidth="0.0" StackPane.alignment="CENTER">
+                                      <buttons>
+                                        <Button mnemonicParsing="false" onAction="#onActionChooseRockBtn" prefHeight="75.0" text="ROCK" />
+                                          <Button mnemonicParsing="false" onAction="#onActionChoosePaperBtn" prefHeight="75.0" text="PAPER" />
+                                          <Button mnemonicParsing="false" onAction="#onActionChooseScissorsBtn" prefHeight="75.0" text="SCISSORS" />
+                                      </buttons>
+                                       <StackPane.margin>
+                                          <Insets />
+                                       </StackPane.margin>
+                                       <padding>
+                                          <Insets right="20.0" />
+                                       </padding>
+                                    </ButtonBar>
+                                 </children>
+                              </StackPane>
+                              <StackPane fx:id="anotherPlayerTurnPane" prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font-weight: bold;" text="ANOTHER PLAYER ON TURN!" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </AnchorPane>
+                     </bottom>
+                  </BorderPane>
+               </children>
+            </AnchorPane>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>
