@@ -200,10 +200,10 @@ public class Client implements INetwork, Runnable {
                     // TODO;
                     break;
                 case "update_games":
-                    reqUpdateGames(tokens);
+                    Platform.runLater(() -> reqUpdateGames(tokens));
                     break;
                 case "prepare_player_to_game":
-                    reqPreparePlayerToGame(tokens[0], nickname, tokens[2], tokens[3]);
+                    Platform.runLater(() -> reqPreparePlayerToGame(tokens[0], nickname, tokens[2], tokens[3]));
                     break;
                 default:
                     System.out.println("ERROR occurred!");

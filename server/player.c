@@ -194,7 +194,7 @@ void player_connect_to_game(player_t *player, game_t *game) {
     game_send_update_players(game);
     if (game->player_count == PLAYER_COUNT)
         game_broadcast_update_games();
-    
+
     memory_free(message);
     memory_free(log_message);
 }
