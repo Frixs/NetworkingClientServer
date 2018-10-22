@@ -3,6 +3,7 @@ package main.java.controller;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
+import javafx.scene.input.MouseEvent;
 import main.java.model.Client;
 import main.java.model.Message;
 
@@ -44,5 +45,10 @@ public class LobbyController extends AContentController {
     @FXML
     void onActionDisconnectBtn(ActionEvent event) {
 
+    }
+
+    @FXML
+    void onMouseClickedItem(MouseEvent event) {
+        System.out.println("clicked on " + gameListLV.getSelectionModel().getSelectedItem());
     }
 }

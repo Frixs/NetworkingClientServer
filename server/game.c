@@ -19,7 +19,7 @@ void game_broadcast_update_games() {
     game_t *game_list_ptr = g_game_list;
     char *message = NULL;
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 1024);
     memset(message, 0, strlen(message));
     sprintf(message, "1;update_games"); // Token message.
 
