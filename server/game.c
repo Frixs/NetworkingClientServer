@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "memory.h"
 #include "stats.h"
+#include "player.h"
 
 /// Broadcast information about available games to all players.
 void game_broadcast_board_info() {
@@ -137,7 +138,7 @@ void game_create(player_t *player) {
     write_log(log_message);
 
     game_add(game);
-    svr_connect_to_game(player, game);
+    player_connect_to_game(player, game);
     game_broadcast_board_info();
 
     memory_free(log_message);
