@@ -1,13 +1,15 @@
-C --->>> S
+S <<<--- C
 ==========
 _player_nickname
 get_games
+create_new_game
 
-C <<<--- S
+S --->>> C
 ==========
 _player_id
 kick_player
 disconnect_player_from_game
-connect_player_to_game
+prepare_player_to_game
 player_quit
-show_games
+update_games
+update_players

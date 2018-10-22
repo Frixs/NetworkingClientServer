@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import main.java.model.Player;
 
 /**
  * Created by Frixs on 16.10.2018.
@@ -54,6 +55,15 @@ public class GameController extends AContentController {
     @Override
     public void afterInitialize() {
 
+    }
+
+    /**
+     * Set player to GUI.
+     * @param p     The player.
+     */
+    public void setPlayer(Player p) {
+        // TODO;
+        System.out.println("TEST");
     }
 
     @FXML

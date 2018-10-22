@@ -31,6 +31,7 @@ char **_svr_split_message(char *message);
 /// \param socket       Socket where the message is sent.
 /// \param message      Message.
 void svr_send(int socket, char *message) {
+    printf("--->>> %s", message);
     bytes_sent += send(socket, message, strlen(message) * sizeof(char), 0);
     messages_sent++;
 }
@@ -101,7 +102,7 @@ void svr_broadcast(char *message) {
     if (!message)
         return;
 
-    printf("--->>> %s", message);
+//    printf("--->>> %s", message);
 
     pthread_mutex_lock(&g_player_list_mutex);
     if (g_player_list != NULL) {
@@ -363,8 +364,8 @@ void _svr_process_request(char *message) {
     // List of events which server accepts from client side.
     if (tokens[1]) {
         if (strcmp(tokens[1], "get_games") == 0) {
-            game_broadcast_board_info();
-        } else if (strcmp(tokens[1], "new_game") == 0) {
+            game_broadcast_update_games();
+        } else if (strcmp(tokens[1], "create_new_game") == 0) {
             game_create(player);
         } else {
             _svr_count_bad_message(message);

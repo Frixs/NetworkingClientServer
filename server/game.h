@@ -6,8 +6,8 @@
 #define SERVER_GAME_H
 
 //game_t *game_find(char *id);
-void game_broadcast_board_info();
-void game_send_player_info(game_t *game);
+void game_broadcast_update_games();
+void game_send_update_players(game_t *game);
 void game_send_current_state_info(game_t *game);
 void game_create(player_t *player);
 void game_add(game_t *game);

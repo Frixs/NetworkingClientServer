@@ -1,9 +1,13 @@
 package main.java.model;
 
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import main.java.controller.AWindowController;
+import main.java.controller.GameController;
+import main.java.controller.LobbyController;
 
+import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -47,11 +51,16 @@ public class Client implements INetwork, Runnable {
      */
     public BufferedReader in;
     /**
+     * Reading thread.
+     */
+    private Thread reader = null;
+    /**
      * NUmber of missed timeouts.
      */
     public int timeout = 0;
 
     private Client() {
+        reader = new Thread(this);
     }
 
     @Override
@@ -108,6 +117,9 @@ public class Client implements INetwork, Runnable {
             return 3;
         }
 
+        // Start reading messages from the server.
+        reader.start();
+
         System.out.println("Connected to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + "!");
         return 0;
     }
@@ -139,34 +151,19 @@ public class Client implements INetwork, Runnable {
         }
     }
 
-    @Override
-    public Message receiveMessage() {
-        String line;
-
-        // Read the response (a line) from the server.
-        try {
-            line = in.readLine();
-            return new Message(line);
-        } catch (IOException e) {
-            System.err.println("ERROR: Read!");
-        }
-
-        return null;
-    }
-
     /**
      * Receive messages from the server.
      */
     @Override
     public void run() {
-        String message = new String();
+        String message;
 
         try {
             do {
                 try {
                     while ((message = in.readLine()) != null) {
                         processMessage(message);
-                        message = new String();
+                        message = "";
                     }
                     timeout++;
 
@@ -199,12 +196,19 @@ public class Client implements INetwork, Runnable {
             // Token list which is acceptable from server side.
             // List of events which client accepts from server side.
             switch (tokens[1]) {
-                case "show_games":
-                    reqListOfGames(tokens);
+                case "update_players":
+                    // TODO;
+                    break;
+                case "update_games":
+                    reqUpdateGames(tokens);
+                    break;
+                case "prepare_player_to_game":
+                    reqPreparePlayerToGame(tokens[0], nickname, tokens[2], tokens[3]);
                     break;
                 default:
                     System.out.println("ERROR occurred!");
-                    System.out.println("Received message does not fit the format!");
+                    System.out.println("\t- Received message does not fit the format!");
+                    System.out.println("\t- Message: " + message);
             }
         } else {
             System.out.println("ERROR occurred!");
@@ -213,10 +217,47 @@ public class Client implements INetwork, Runnable {
     }
 
     /**
-     * REQ: TODO
-     * @param tokens
+     * REQ: Set player to be able to play the game.
+     * @param id            Player ID.
+     * @param nickname      Player nickname.
+     * @param color         Player color
+     * @param gameId        Game which player joined.
      */
-    private void reqListOfGames(String[] tokens) {
+    private void reqPreparePlayerToGame(String id, String nickname, String color, String gameId) {
+        Color c;
+
+        try {
+            c = Color.decode("#" + color);
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR occurred!");
+            e.printStackTrace();
+            return;
+        }
+
+        this.gameId = gameId;
+
+        Player p = new Player(id, nickname, c);
+
+        ((GameController) mainWindowController.loadContent(WindowContent.GAME)).setPlayer(p);
+    }
+
+    /**
+     * REQ: Update game list view in the lobby menu.
+     * @param tokens    The tokens.
+     */
+    private void reqUpdateGames(String[] tokens) {
+        if (!(mainWindowController.getCurrentContentController() instanceof LobbyController))
+            return;
+
+        ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().clear();
+
+        for (int i = 2; (i + 1) < tokens.length; i+= 2) {
+            tokens[i] = tokens[i].trim();
+            tokens[i + 1] = tokens[i + 1].trim();
+            ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().add(new Game(tokens[i + 1], tokens[i]).toString());
+        }
+
+        timeout = 0;
     }
 }
 

@@ -15,13 +15,13 @@
 #include "player.h"
 
 /// Broadcast information about available games to all players.
-void game_broadcast_board_info() {
+void game_broadcast_update_games() {
     game_t *game_list_ptr = g_game_list;
     char *message = NULL;
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "1;show_games"); // Token message.
+    sprintf(message, "1;update_games"); // Token message.
 
     pthread_mutex_lock(&g_game_list_mutex);
 
@@ -41,9 +41,9 @@ void game_broadcast_board_info() {
     svr_broadcast(message);
 }
 
-/// Send information about all players who playing the game.
+/// Send information about all players who playing the current game.
 /// \param game     The game.
-void game_send_player_info(game_t *game) {
+void game_send_update_players(game_t *game) {
     if (!game)
         return;
 
@@ -53,7 +53,7 @@ void game_send_player_info(game_t *game) {
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "1;players");
+    sprintf(message, "1;update_players"); // Token message.
 
     for (i = 0; i < PLAYER_COUNT; ++i) {
         player = game->players[i];
@@ -139,7 +139,7 @@ void game_create(player_t *player) {
 
     game_add(game);
     player_connect_to_game(player, game);
-    game_broadcast_board_info();
+    game_broadcast_update_games();
 
     memory_free(log_message);
 }
@@ -210,7 +210,7 @@ void game_remove(game_t *game) {
     pthread_mutex_unlock(&g_game_list_mutex);
 
     write_log(log_message);
-    game_broadcast_board_info();
+    game_broadcast_update_games();
 
     memory_free(log_message);
 }
@@ -236,7 +236,7 @@ void game_multicast(game_t *game, char *message) {
 
     int i;
 
-    printf("--->>> %s\n", message);
+//    printf("--->>> %s", message);
 
     for (i = 0; i < PLAYER_COUNT; ++i)
         if (game->players[i] && game->players[i]->is_disconnected != 1)

@@ -27,10 +27,4 @@ public interface INetwork {
      * @param msg       The message.
      */
     public void sendMessage(Message msg);
-
-    /**
-     * Get message from the connected server.
-     * @return      Received message.
-     */
-    public Message receiveMessage();
 }

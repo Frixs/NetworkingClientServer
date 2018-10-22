@@ -14,6 +14,8 @@ import java.io.IOException;
  */
 public abstract class AWindowController {
 
+    private AContentController currentContentController = null;
+
     @FXML
     protected AnchorPane rootPane;
 
@@ -28,12 +30,17 @@ public abstract class AWindowController {
         return rootContentPane;
     }
 
+    public AContentController getCurrentContentController() {
+        return currentContentController;
+    }
+
     /**
      * Load new content in the main window.
      *
      * @param contentType           Which content you want to add.
+     * @return                      Controller reference.
      */
-    public void loadContent(WindowContent contentType) {
+    public AContentController loadContent(WindowContent contentType) {
         Pane pane = null;
         FXMLLoader fxmlLoader = null;
 
@@ -61,9 +68,12 @@ public abstract class AWindowController {
             rootContentPane.getChildren().setAll(pane);
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
 
         // Run after initialization process.
         ((AContentController) fxmlLoader.getController()).afterInitialize();
+
+        return currentContentController = fxmlLoader.getController();
     }
 }

@@ -183,7 +183,7 @@ void player_connect_to_game(player_t *player, game_t *game) {
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "%s;connect_player_to_game;%s;%s\n", player->id, player->color, game->id); // Token message.
+    sprintf(message, "%s;prepare_player_to_game;%s;%s\n", player->id, player->color, game->id); // Token message.
 
     svr_send(player->socket, message);
 
@@ -191,10 +191,10 @@ void player_connect_to_game(player_t *player, game_t *game) {
     sprintf(log_message, "\t> Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
     write_log(log_message);
 
-    game_send_player_info(game);
+    game_send_update_players(game);
     if (game->player_count == PLAYER_COUNT)
-        game_broadcast_board_info();
-
+        game_broadcast_update_games();
+    
     memory_free(message);
     memory_free(log_message);
 }
@@ -223,7 +223,7 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
         sem_post(&game->sem_play);
     }
 
-    game_broadcast_board_info();
+    game_broadcast_update_games();
 
     // Log.
     log_message = memory_malloc(sizeof(char) * 256);
@@ -244,7 +244,7 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
         memory_free(message);
     } else {
         game_multicast(game, message);
-        game_send_player_info(game);
+        game_send_update_players(game);
         game_send_current_state_info(game);
     }
 
