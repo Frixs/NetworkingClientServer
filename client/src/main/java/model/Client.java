@@ -88,7 +88,7 @@ public class Client implements INetwork, Runnable {
             return 1;
 
         // Send client nickname to server to be able to identify the client.
-        sendMessage(new Message("1;nickname;" + this.nickname));
+        sendMessage(new Message("1;_player_nickname;" + this.nickname)); // Token message.
 
         try {
             String message;
@@ -96,13 +96,13 @@ public class Client implements INetwork, Runnable {
             if ((message = in.readLine()) != null) {
                 String[] tokens = message.split(";");
 
-                if (tokens.length > 1 && tokens[1].compareTo("id") == 0)
+                if (tokens.length > 1 && tokens[1].compareTo("_player_id") == 0)
                     this.id = tokens[0].trim();
                 else
                     return 3;
             }
 
-            sendMessage(new Message("show_games"));
+            sendMessage(new Message("get_games")); // Token message.
 
         } catch (Exception e) {
             return 3;
@@ -171,7 +171,7 @@ public class Client implements INetwork, Runnable {
                     timeout++;
 
                 } catch (SocketTimeoutException e) {
-                    sendMessage(new Message("show_games"));
+                    sendMessage(new Message("get_games")); // Token message.
                 }
             } while (timeout < 2);
 
@@ -196,6 +196,7 @@ public class Client implements INetwork, Runnable {
         String[] tokens = message.split(";");
 
         if (tokens.length > 0) {
+            // Token list which is acceptable from server side.
             // List of events which client accepts from server side.
             switch (tokens[1]) {
                 case "show_games":

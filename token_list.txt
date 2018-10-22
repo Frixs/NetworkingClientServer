@@ -1,0 +1,13 @@
+C --->>> S
+==========
+_player_nickname
+get_games
+
+C <<<--- S
+==========
+_player_id
+kick_player
+disconnect_player_from_game
+connect_player_to_game
+player_quit
+show_games

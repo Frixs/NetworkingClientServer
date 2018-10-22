@@ -35,101 +35,6 @@ void svr_send(int socket, char *message) {
     messages_sent++;
 }
 
-/// Connects a player to a game.
-/// \param player       The player.
-/// \param game         The game.
-void svr_connect(player_t *player, game_t *game) {
-    if (!player || !game)
-        return;
-
-    int i;
-    char *message = NULL;
-    char *log_message = NULL;
-
-    if (game->player_count >= PLAYER_COUNT)
-        return;
-
-    for (i = 0; i < PLAYER_COUNT; ++i) {
-        if (game->players[i] != NULL)
-            continue;
-
-        game->players[i] = player;
-        player->color = g_color_list[i];
-        game->player_count++;
-        player->game = game;
-        break;
-    }
-
-    message = memory_malloc(sizeof(char) * 256);
-    memset(message, 0, strlen(message));
-    sprintf(message, "%s;set_player;%s;%s\n", player->id, player->color, game->id);
-
-    svr_send(player->socket, message);
-
-    log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "\t> Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
-    write_log(log_message);
-
-    game_send_player_info(game);
-    if (game->player_count == PLAYER_COUNT)
-        game_broadcast_board_info();
-
-    memory_free(message);
-    memory_free(log_message);
-}
-
-/// Disconnects the player from its current game.
-/// \param player
-/// \param game
-void svr_disconnect(player_t *player, game_t *game) {
-    if (!player || !game)
-        return;
-
-    int i;
-    char *log_message = NULL;
-    char *message = NULL;
-
-    for (i = 0; i < PLAYER_COUNT; i++) {
-        if (game->players[i] == player) {
-            game->players[i] = NULL;
-            game->player_count--;
-            player->game = NULL;
-            break;
-        }
-    }
-
-    if (player == game->player_on_turn) {
-        sem_post(&game->sem_play);
-    }
-
-    game_broadcast_board_info();
-
-    // Log.
-    log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "\t> Player: %s (ID: %s) has disconnected from the game %s (ID: %s)!\n", player->nickname,
-            player->id, game->name, game->id);
-    write_log(log_message);
-    memory_free(log_message);
-
-    // Send a message back to client.
-    message = memory_malloc(sizeof(char) * 256);
-    sprintf(message, "%s;disconnect\n", player->id);
-
-    if (player->is_disconnected != 1)
-        svr_send(player->socket, message);
-
-    if (game->player_count == 0) {
-        game_remove(game);
-        memory_free(message);
-    } else {
-        game_multicast(game, message);
-        game_send_player_info(game);
-        game_send_current_state_info(game);
-    }
-
-    player->color = NULL;
-}
-
 /// Check if ID is already in list of players or game instances.
 /// \param id
 /// \return
@@ -218,7 +123,7 @@ void svr_broadcast(char *message) {
 /// The main data stream to each player.
 /// \param arg      Pointer to newly added player.
 /// \return         Status code.
-void *_svr_serve_recieving(void *arg) {
+void *_svr_serve_receiving(void *arg) {
     player_t *player_ptr = (player_t *) arg;
     int client_sock = player_ptr->socket;
     char *id = player_ptr->id;
@@ -235,11 +140,11 @@ void *_svr_serve_recieving(void *arg) {
                 if (timeout > 0) {
                     // Send a message back to client.
                     message = memory_malloc(sizeof(char) * 256);
-                    sprintf(message, "%s;kicked\n", player_ptr->id);
+                    sprintf(message, "%s;kick_player\n", player_ptr->id); // Token message.
                     svr_send(player_ptr->socket, message);
                     memory_free(message);
 
-                    svr_disconnect(player_ptr, player_ptr->game);
+                    player_disconnect_from_game(player_ptr, player_ptr->game);
                 }
 
                 timeout++;
@@ -259,13 +164,13 @@ void *_svr_serve_recieving(void *arg) {
         }
     }
 
-    // If the connection is lost - svr_disconnect & remove the player.
+    // If the connection is lost - player_disconnect_from_game & remove the player.
     player_ptr = player_find(id);
     if (player_ptr) {
         player_ptr->is_disconnected = 1;
 
         if (player_ptr->game) {
-            svr_disconnect(player_ptr, player_ptr->game);
+            player_disconnect_from_game(player_ptr, player_ptr->game);
         }
 
         player_remove(player_ptr);
@@ -305,7 +210,7 @@ void *_svr_connection_handler(void *arg) {
     }
 
     // If the message from client contains nickname
-    if (tokens != NULL && strcmp(tokens, "nickname") == 0) {
+    if (tokens != NULL && strcmp(tokens, "_player_nickname") == 0) {
         nickname = strtok(NULL, ";");
 
         if (!nickname) {
@@ -318,7 +223,7 @@ void *_svr_connection_handler(void *arg) {
 
         // Send a message back to client.
         message = memory_malloc(sizeof(char) * 256);
-        sprintf(message, "%s;id\n", player->id);
+        sprintf(message, "%s;_player_id\n", player->id); // Token message.
         svr_send(player->socket, message);
         memory_free(message);
 
@@ -327,7 +232,7 @@ void *_svr_connection_handler(void *arg) {
 
         // Create a new thread to solve player data sending separately.
         thread_id = 0;
-        pthread_create(&thread_id, NULL, _svr_serve_recieving, (void *) player);
+        pthread_create(&thread_id, NULL, _svr_serve_receiving, (void *) player);
 
         // Log.
         log_message = memory_malloc(sizeof(char) * 256);
@@ -454,9 +359,10 @@ void _svr_process_request(char *message) {
         _svr_count_bad_message(message);
     }
 
+    // Token list which is acceptable from client side.
     // List of events which server accepts from client side.
     if (tokens[1]) {
-        if (strcmp(tokens[1], "show_games") == 0) {
+        if (strcmp(tokens[1], "get_games") == 0) {
             game_broadcast_board_info();
         } else if (strcmp(tokens[1], "new_game") == 0) {
             game_create(player);
@@ -571,7 +477,7 @@ int main(int argv, char *args[]) {
     pthread_cancel(thread_id);
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "1;stop_server\n");
+    sprintf(log_message, "1;stop_server\n"); // Token message.
 //    svr_broadcast(log_message);
 
     colors_free();

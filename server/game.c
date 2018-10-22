@@ -20,7 +20,7 @@ void game_broadcast_board_info() {
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "1;show_games");
+    sprintf(message, "1;show_games"); // Token message.
 
     pthread_mutex_lock(&g_game_list_mutex);
 
@@ -137,7 +137,7 @@ void game_create(player_t *player) {
     write_log(log_message);
 
     game_add(game);
-    svr_connect(player, game);
+    svr_connect_to_game(player, game);
     game_broadcast_board_info();
 
     memory_free(log_message);

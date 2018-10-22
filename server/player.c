@@ -11,6 +11,9 @@
 #include "player.h"
 #include "memory.h"
 #include "stats.h"
+#include "constants.h"
+#include "game.h"
+#include "colors.h"
 
 /// Create a player struct.
 /// \param socket       Socket number.
@@ -78,7 +81,7 @@ void player_remove(player_t *player) {
     pthread_mutex_unlock(&g_player_list_mutex);
 
     message = memory_malloc(sizeof(char) * 256);
-    sprintf(message, "%s;quit\n", id);
+    sprintf(message, "%s;player_quit\n", id); // Token message.
 
     if (is_disconnected != 1)
         svr_send(socket, message);
@@ -151,4 +154,99 @@ void player_add(player_t *player) {
     }
 
     pthread_mutex_unlock(&g_player_list_mutex);
+}
+
+/// Connects a player to a game.
+/// \param player       The player.
+/// \param game         The game.
+void player_connect_to_game(player_t *player, game_t *game) {
+    if (!player || !game)
+        return;
+
+    int i;
+    char *message = NULL;
+    char *log_message = NULL;
+
+    if (game->player_count >= PLAYER_COUNT)
+        return;
+
+    for (i = 0; i < PLAYER_COUNT; ++i) {
+        if (game->players[i] != NULL)
+            continue;
+
+        game->players[i] = player;
+        player->color = g_color_list[i];
+        game->player_count++;
+        player->game = game;
+        break;
+    }
+
+    message = memory_malloc(sizeof(char) * 256);
+    memset(message, 0, strlen(message));
+    sprintf(message, "%s;connect_player_to_game;%s;%s\n", player->id, player->color, game->id); // Token message.
+
+    svr_send(player->socket, message);
+
+    log_message = memory_malloc(sizeof(char) * 256);
+    sprintf(log_message, "\t> Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
+    write_log(log_message);
+
+    game_send_player_info(game);
+    if (game->player_count == PLAYER_COUNT)
+        game_broadcast_board_info();
+
+    memory_free(message);
+    memory_free(log_message);
+}
+
+/// Disconnects a player from its current game.
+/// \param player       The player.
+/// \param game         The game.
+void player_disconnect_from_game(player_t *player, game_t *game) {
+    if (!player || !game)
+        return;
+
+    int i;
+    char *log_message = NULL;
+    char *message = NULL;
+
+    for (i = 0; i < PLAYER_COUNT; i++) {
+        if (game->players[i] == player) {
+            game->players[i] = NULL;
+            game->player_count--;
+            player->game = NULL;
+            break;
+        }
+    }
+
+    if (player == game->player_on_turn) {
+        sem_post(&game->sem_play);
+    }
+
+    game_broadcast_board_info();
+
+    // Log.
+    log_message = memory_malloc(sizeof(char) * 256);
+    sprintf(log_message, "\t> Player: %s (ID: %s) has disconnected from the game %s (ID: %s)!\n", player->nickname,
+            player->id, game->name, game->id);
+    write_log(log_message);
+    memory_free(log_message);
+
+    // Send a message back to client.
+    message = memory_malloc(sizeof(char) * 256);
+    sprintf(message, "%s;disconnect_player_from_game\n", player->id); // Token message.
+
+    if (player->is_disconnected != 1)
+        svr_send(player->socket, message);
+
+    if (game->player_count == 0) {
+        game_remove(game);
+        memory_free(message);
+    } else {
+        game_multicast(game, message);
+        game_send_player_info(game);
+        game_send_current_state_info(game);
+    }
+
+    player->color = NULL;
 }
