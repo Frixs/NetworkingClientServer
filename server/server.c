@@ -365,8 +365,8 @@ void _svr_process_request(char *message) {
     if (tokens[1]) {
         if (strcmp(tokens[1], "get_games") == 0) {
             game_broadcast_update_games();
-        } else if (strcmp(tokens[1], "create_new_game") == 0) {
-            game_create(player);
+        } else if (strcmp(tokens[1], "create_new_game") == 0 && tokens[2]) {
+            game_create(player, atoi(tokens[2]));
         } else {
             _svr_count_bad_message(message);
         }
@@ -385,7 +385,7 @@ char **_svr_split_message(char *message) {
     if (!message)
         return NULL;
 
-    char **message_split = memory_malloc(MAX_TOKENS * sizeof(char *));
+    char **message_split = memory_malloc(MAX_CLIENT_TOKENS * sizeof(char *));
     int i = 0;
 
     message_split[i] = strtok(message, ";");
@@ -394,7 +394,7 @@ char **_svr_split_message(char *message) {
         return message_split;
 
     i++;
-    while (i < MAX_TOKENS) {
+    while (i < MAX_CLIENT_TOKENS) {
         message_split[i] = strtok(NULL, ";");
 
         if (message_split[i] == NULL)
@@ -443,11 +443,11 @@ int main(int argv, char *args[]) {
             printf("\t> Setting up the port (%d).\n", port);
         } else {
             printf("\t> Setting up the default port.\n");
-            port = DEFAULT_PORT;
+            port = PORT_DEFAULT;
         }
     } else {
-        printf("\t> Setting up the default port (%d).\n", DEFAULT_PORT);
-        port = DEFAULT_PORT;
+        printf("\t> Setting up the default port (%d).\n", PORT_DEFAULT);
+        port = PORT_DEFAULT;
     }
 
     // Log.

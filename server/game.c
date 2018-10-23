@@ -28,7 +28,7 @@ void game_broadcast_update_games() {
     if (g_game_list != NULL) {
         do {
             if (!game_list_ptr->player_on_turn && game_list_ptr->player_count < PLAYER_COUNT)
-                sprintf(message, "%s;%s;%s", message, game_list_ptr->name, game_list_ptr->id);
+                sprintf(message, "%s;%s;%s;%d", message, game_list_ptr->name, game_list_ptr->id, game_list_ptr->goal);
 
             game_list_ptr = game_list_ptr->next_game;
 
@@ -108,7 +108,8 @@ void game_send_current_state_info(game_t *game) {
 
 /// Creates the game.
 /// \param player       Creator of the game.
-void game_create(player_t *player) {
+/// \param goal         The goal.
+void game_create(player_t *player, int goal) {
     if (!player)
         return;
 
@@ -125,6 +126,11 @@ void game_create(player_t *player) {
 
     game->next_game = NULL;
     game->player_count = 0;
+
+    if (goal > 0)
+        game->goal = goal;
+    else
+        game->goal = GOAL_DEFAULT;
 
     sem_init(&(game->sem_play), 0, 0);
 

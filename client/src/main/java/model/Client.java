@@ -63,6 +63,10 @@ public class Client implements INetwork, Runnable {
         reader = new Thread(this);
     }
 
+    public Thread getReader() {
+        return reader;
+    }
+
     @Override
     public int connect(String ihost, int iport, String nickname) {
         if (ihost.trim().length() == 0 || nickname.trim().length() == 0)
@@ -129,7 +133,7 @@ public class Client implements INetwork, Runnable {
         try {
             in.close();
             out.close();
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             System.out.println("ERROR: Unable to close streams.");
         } finally {
             try {
@@ -139,6 +143,9 @@ public class Client implements INetwork, Runnable {
                 System.out.println("ERROR: Unable to close socket.");
             }
         }
+
+        if (reader != null)
+            reader.interrupt();
     }
 
     @Override
@@ -173,15 +180,19 @@ public class Client implements INetwork, Runnable {
             } while (timeout < 2);
 
             mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Disconnected from the server!", ButtonType.OK);
-            alert.showAndWait();
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Disconnected from the server!", ButtonType.OK);
+                alert.showAndWait();
 //                    .filter(response -> response == ButtonType.OK)
 //                    .ifPresent(response -> System.out.println("hey!"));
+            });
 
         } catch (IOException e) {
             mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Unspecified ERROR occurred on the server!", ButtonType.OK);
-            alert.showAndWait();
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Unspecified ERROR occurred on the server!", ButtonType.OK);
+                alert.showAndWait();
+            });
         }
     }
 
@@ -202,8 +213,8 @@ public class Client implements INetwork, Runnable {
                 case "update_games":
                     Platform.runLater(() -> reqUpdateGames(tokens));
                     break;
-                case "prepare_player_to_game":
-                    Platform.runLater(() -> reqPreparePlayerToGame(tokens[0], nickname, tokens[2], tokens[3]));
+                case "prepare_window_for_game":
+                    Platform.runLater(() -> reqPrepareWindowForGame(tokens[0], nickname, tokens[2], tokens[3], tokens[4], tokens[5]));
                     break;
                 default:
                     System.out.println("ERROR occurred!");
@@ -223,22 +234,34 @@ public class Client implements INetwork, Runnable {
      * @param color         Player color
      * @param gameId        Game which player joined.
      */
-    private void reqPreparePlayerToGame(String id, String nickname, String color, String gameId) {
+    private void reqPrepareWindowForGame(String id, String nickname, String color, String gameId, String gameName, String gameGoal) {
         Color c;
+        Player p = null;
+        Game g = null;
 
         try {
             c = Color.decode("#" + color);
         } catch (NumberFormatException e) {
             System.out.println("ERROR occurred!");
+            System.out.println("Cannot decode player information!");
             e.printStackTrace();
             return;
         }
 
         this.gameId = gameId;
 
-        Player p = new Player(id, nickname, c);
+        p = new Player(id, nickname, c);
 
-        ((GameController) mainWindowController.loadContent(WindowContent.GAME)).setPlayer(p);
+        try {
+            g = new Game(gameId, gameName, Integer.parseInt(gameGoal));
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR occurred!");
+            System.out.println("Cannot decode game information!");
+            e.printStackTrace();
+            return;
+        }
+
+        ((GameController) mainWindowController.loadContent(WindowContent.GAME)).setWindow(p, g);
     }
 
     /**
@@ -249,12 +272,26 @@ public class Client implements INetwork, Runnable {
         if (!(mainWindowController.getCurrentContentController() instanceof LobbyController))
             return;
 
+        Game g = null;
+
         ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().clear();
 
-        for (int i = 2; (i + 1) < tokens.length; i+= 2) {
+        for (int i = 2; (i + 1) < tokens.length; i+= 3) {
             tokens[i] = tokens[i].trim();
             tokens[i + 1] = tokens[i + 1].trim();
-            ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().add(new Game(tokens[i + 1], tokens[i]).toString());
+            tokens[i + 2] = tokens[i + 2].trim();
+
+            try {
+                g = new Game(tokens[i + 1], tokens[i], Integer.parseInt(tokens[i + 2]));
+
+            } catch (NumberFormatException e) {
+                System.out.println("ERROR occurred!");
+                System.out.println("Cannot decode game information!");
+                e.printStackTrace();
+                return;
+            }
+
+            ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().add(g.toString());
         }
 
         timeout = 0;

@@ -9,7 +9,7 @@ S --->>> C
 _player_id
 kick_player
 disconnect_player_from_game
-prepare_player_to_game
+prepare_window_for_game
 player_quit
 update_games
 update_players

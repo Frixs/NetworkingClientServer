@@ -7,4 +7,5 @@ public enum WindowContent {
     CONNECTION_FORM,
     LOBBY,
     GAME,
+    END,
 }

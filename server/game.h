@@ -9,7 +9,7 @@
 void game_broadcast_update_games();
 void game_send_update_players(game_t *game);
 void game_send_current_state_info(game_t *game);
-void game_create(player_t *player);
+void game_create(player_t *player, int goal);
 void game_add(game_t *game);
 void game_remove(game_t *game);
 void game_destroy(game_t *game);

@@ -1,11 +1,17 @@
 package main.java.core;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import main.java.model.Client;
+import main.java.model.WindowContent;
+
+import static java.lang.Thread.sleep;
 
 public class App extends Application {
 
@@ -13,7 +19,14 @@ public class App extends Application {
      * What to do if application was closed
      */
     public static void shutdown() {
-        Platform.exit();
+        Client.SELF.mainWindowController.loadContent(WindowContent.END);
+
+        PauseTransition delayOverlay = new PauseTransition(Duration.seconds(1));
+        delayOverlay.setOnFinished(event -> {
+            Client.SELF.disconnect();
+            Platform.exit();
+        });
+        delayOverlay.play();
     }
 
     @Override
@@ -26,6 +39,7 @@ public class App extends Application {
         scene.getStylesheets().add("/main/resource/css/ConnectionForm.css");
         scene.getStylesheets().add("/main/resource/css/Lobby.css");
         scene.getStylesheets().add("/main/resource/css/Game.css");
+        scene.getStylesheets().add("/main/resource/css/End.css");
 
         primaryStage.setTitle("Rock Paper Scissors");
         primaryStage.setScene(scene);
@@ -35,8 +49,11 @@ public class App extends Application {
         primaryStage.setMinHeight(480);
         primaryStage.setMaxWidth(640);
         primaryStage.setMaxHeight(480);
-
-        primaryStage.setOnCloseRequest(e -> App.shutdown());
+        Platform.setImplicitExit(false);
+        primaryStage.setOnCloseRequest(e -> {
+            App.shutdown();
+            e.consume();
+        });
 
         primaryStage.show();
     }
