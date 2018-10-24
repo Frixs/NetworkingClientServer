@@ -82,14 +82,25 @@ public class GameController extends AContentController {
             return;
         }
 
-
+        playerList[pIndex] = p;
 
         // Set GUI.
         if (pIndex == 0) {
-
+            p1NicknameT.setText(playerList[pIndex].getNickname());
+            p1ChoiceIW.setImage(null);
+            p2NicknameT.setText("- - -");
+            p2ChoiceIW.setImage(null);
         } else {
-
+            p2NicknameT.setText(playerList[pIndex].getNickname());
+            p2ChoiceIW.setImage(null);
         }
+
+        gameNameT.setText(g.getName());
+        goalT.setText("Goal: " + g.getGoal());
+        yourTurnPane.setVisible(false);
+        anotherPlayerTurnPane.setVisible(true);
+
+        scoreT.setText("0 : 0");
     }
 
     /**

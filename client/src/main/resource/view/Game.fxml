@@ -174,7 +174,7 @@
                               </StackPane>
                               <StackPane fx:id="anotherPlayerTurnPane" prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font-weight: bold;" text="ANOTHER PLAYER ON TURN!" />
+                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font-weight: bold;" text="WAITING TO ANOTHER PLAYER" />
                                  </children>
                               </StackPane>
                            </children>

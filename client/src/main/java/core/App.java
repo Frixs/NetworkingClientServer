@@ -27,6 +27,7 @@ public class App extends Application {
         delayOverlay.setOnFinished(event -> {
             Client.SELF.disconnect();
             Platform.exit();
+            System.exit(0);
         });
         delayOverlay.play();
     }
@@ -51,7 +52,7 @@ public class App extends Application {
         primaryStage.setMinHeight(480);
         primaryStage.setMaxWidth(640);
         primaryStage.setMaxHeight(480);
-        Platform.setImplicitExit(false);
+
         primaryStage.setOnCloseRequest(e -> {
             App.shutdown();
             e.consume();

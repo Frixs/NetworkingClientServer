@@ -160,8 +160,8 @@ public class Client implements INetwork, Runnable {
         nullParameters();
 
         if (reader != null) {
-            reader.interrupt();
-            reader = null;
+            //reader.interrupt();
+            stopReceiving = true;
         }
     }
 
@@ -220,7 +220,7 @@ public class Client implements INetwork, Runnable {
         } catch (IOException e) {
             Platform.runLater(() -> {
                 mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Unspecified ERROR occurred on the server!", ButtonType.OK);
+                Alert alert = new Alert(Alert.AlertType.ERROR, "An unexpected ERROR occurred on the server!", ButtonType.OK);
                 try {
                     alert.showAndWait();
 
@@ -252,7 +252,11 @@ public class Client implements INetwork, Runnable {
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[0], nickname, tokens[2], tokens[3], tokens[4], tokens[5]));
                     break;
                 case "disconnect_player":
+                    // We want to terminate the thread before the thread will go to wait to another message from the server again.
+                    // If we did not do that, the client would try to read some message until timeout and then alert us to an unexpected server error.
+                    // Because the disconnect method nulls "in" and "out" parameter while the thread is still trying to receive message.
                     stopReceiving = true;
+
                     Platform.runLater(() -> reqDisconnectPlayer());
                     break;
                 default:
