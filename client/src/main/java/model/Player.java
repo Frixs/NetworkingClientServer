@@ -1,6 +1,7 @@
 package main.java.model;
 
-import java.awt.*;
+
+import javafx.scene.paint.Color;
 
 public class Player {
     private String id;

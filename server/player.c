@@ -183,7 +183,7 @@ void player_connect_to_game(player_t *player, game_t *game) {
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "%s;prepare_window_for_game;%s;%s;%s;%d\n", player->id, player->color, game->id, game->name, game->goal); // Token message.
+    sprintf(message, "%s;prepare_window_for_game;%s;%s;%d\n", player->id, game->id, game->name, game->goal); // Token message.
 
     svr_send(player->socket, message);
 

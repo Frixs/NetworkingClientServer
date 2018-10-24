@@ -4,9 +4,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import main.java.model.Game;
 import main.java.model.Player;
+
+import java.util.ArrayList;
 
 /**
  * Created by Frixs on 16.10.2018.
@@ -41,17 +44,9 @@ public class GameController extends AContentController {
     private StackPane anotherPlayerTurnPane;
 
     /**
-     * Players who are set in the game.
-     */
-    private Player[] playerList = null;
-
-    /**
      * no-args constructor
      */
     public GameController() {
-         playerList = new Player[2];
-         playerList[0] = null;
-         playerList[1] = null;
     }
 
     /**
@@ -68,48 +63,54 @@ public class GameController extends AContentController {
 
     /**
      * Set player to GUI.
-     * @param p     The player.
-     * @param g     The game.
+     *
+     * @param g The game.
      */
-    public void setWindow(Player p, Game g) {
-        int pIndex;
-
-        if (playerList[0] == null) {
-            pIndex = 0;
-        } else if (playerList[1] == null) {
-            pIndex = 1;
-        } else {
-            return;
-        }
-
-        playerList[pIndex] = p;
-
-        // Set GUI.
-        if (pIndex == 0) {
-            p1NicknameT.setText(playerList[pIndex].getNickname());
-            p1ChoiceIW.setImage(null);
-            p2NicknameT.setText("- - -");
-            p2ChoiceIW.setImage(null);
-        } else {
-            p2NicknameT.setText(playerList[pIndex].getNickname());
-            p2ChoiceIW.setImage(null);
-        }
-
+    public void setWindow(Game g) {
+        p1NicknameT.setText("- - -");
+        p1ChoiceIW.setImage(null);
+        p2NicknameT.setText("- - -");
+        p2ChoiceIW.setImage(null);
         gameNameT.setText(g.getName());
         goalT.setText("Goal: " + g.getGoal());
+        scoreT.setText("0 : 0");
+
         yourTurnPane.setVisible(false);
         anotherPlayerTurnPane.setVisible(true);
-
-        scoreT.setText("0 : 0");
     }
 
     /**
-     * Unset player from GUI.
-     * @param p     The player.
+     * Update window information about players.
+     *
+     * @param list Player list.
      */
-    public void unsetWindow(Player p) {
-        // TODO;
-        System.out.println("TEST");
+    public void updatePlayers(ArrayList<Player> list) {
+        int i = 1;
+
+        // Set default first.
+        p1NicknameT.setText("- - -");
+        p1NicknameT.setFill(Color.valueOf("707070"));
+        p2NicknameT.setText("- - -");
+        p2NicknameT.setFill(Color.valueOf("707070"));
+
+        // Set UI by player values.
+        for (Player p : list) {
+            switch (i) {
+                case 1:
+                    p1NicknameT.setText(p.getNickname());
+                    p1NicknameT.setFill(p.getColor());
+                    break;
+                case 2:
+                    p2NicknameT.setText(p.getNickname());
+                    p2NicknameT.setFill(p.getColor());
+                    break;
+                default:
+                    System.out.println("ERROR occurred!");
+                    System.out.println("There are more players in the game than expected!");
+            }
+
+            i++;
+        }
     }
 
     @FXML

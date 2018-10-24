@@ -4,13 +4,13 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import main.java.controller.AWindowController;
 import main.java.controller.GameController;
 import main.java.controller.LobbyController;
 import main.java.core.App;
 
-import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -243,13 +243,13 @@ public class Client implements INetwork, Runnable {
             // List of events which client accepts from server side.
             switch (tokens[1]) {
                 case "update_players":
-                    // TODO;
+                    Platform.runLater(() -> reqUpdatePlayers(tokens));
                     break;
                 case "update_games":
                     Platform.runLater(() -> reqUpdateGames(tokens));
                     break;
                 case "prepare_window_for_game":
-                    Platform.runLater(() -> reqPrepareWindowForGame(tokens[0], nickname, tokens[2], tokens[3], tokens[4], tokens[5]));
+                    Platform.runLater(() -> reqPrepareWindowForGame(tokens[2], tokens[3], tokens[4]));
                     break;
                 case "disconnect_player":
                     // We want to terminate the thread before the thread will go to wait to another message from the server again.
@@ -271,7 +271,38 @@ public class Client implements INetwork, Runnable {
     }
 
     /**
-     * Disconnect player on client side.
+     * REQ: Update game GUI according to players.
+     * @param tokens        The tokens.
+     */
+    private void reqUpdatePlayers(String[] tokens) {
+        if (!(mainWindowController.getCurrentContentController() instanceof GameController))
+            return;
+
+        ArrayList<Player> list = new ArrayList<Player>();
+        Color c;
+
+        for (int i = 2; (i + 1) < tokens.length; i+= 3) {
+            tokens[i] = tokens[i].trim();           // id;
+            tokens[i + 1] = tokens[i + 1].trim();   // nickname;
+            tokens[i + 2] = tokens[i + 2].trim();   // color;
+
+            try {
+                c = Color.valueOf(tokens[i + 2]);
+            } catch (Exception e) {
+                System.out.println("ERROR occurred!");
+                System.out.println("Cannot decode player information!");
+                e.printStackTrace();
+                return;
+            }
+
+            list.add(new Player(tokens[i], tokens[i + 1], c));
+        }
+
+        ((GameController) mainWindowController.getCurrentContentController()).updatePlayers(list);
+    }
+
+    /**
+     * REQ: Disconnect player on client side.
      */
     private void reqDisconnectPlayer() {
         nullParameters();
@@ -287,28 +318,14 @@ public class Client implements INetwork, Runnable {
 
     /**
      * REQ: Set player to be able to play the game.
-     * @param id            Player ID.
-     * @param nickname      Player nickname.
-     * @param color         Player color
      * @param gameId        Game which player joined.
+     * @param gameName      Game name.
+     * @param gameGoal      Goal of the game.
      */
-    private void reqPrepareWindowForGame(String id, String nickname, String color, String gameId, String gameName, String gameGoal) {
-        Color c;
-        Player p = null;
+    private void reqPrepareWindowForGame(String gameId, String gameName, String gameGoal) {
         Game g = null;
 
-        try {
-            c = Color.decode("#" + color);
-        } catch (NumberFormatException e) {
-            System.out.println("ERROR occurred!");
-            System.out.println("Cannot decode player information!");
-            e.printStackTrace();
-            return;
-        }
-
         this.gameId = gameId;
-
-        p = new Player(id, nickname, c);
 
         try {
             g = new Game(gameId, gameName, Integer.parseInt(gameGoal));
@@ -319,7 +336,7 @@ public class Client implements INetwork, Runnable {
             return;
         }
 
-        ((GameController) mainWindowController.loadContent(WindowContent.GAME)).setWindow(p, g);
+        ((GameController) mainWindowController.loadContent(WindowContent.GAME)).setWindow(g);
     }
 
     /**

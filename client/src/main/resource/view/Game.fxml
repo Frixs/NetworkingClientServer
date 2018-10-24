@@ -90,7 +90,7 @@
                                        <children>
                                           <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <children>
-                                                <Text fx:id="p1NicknameT" fill="#1083d0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P1 NICKNAME&gt;" />
+                                                <Text fx:id="p1NicknameT" fill="#707070" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P1 NICKNAME&gt;" />
                                              </children>
                                           </StackPane>
                                        </children>
@@ -101,7 +101,7 @@
                                        <children>
                                           <StackPane prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <children>
-                                                <Text fx:id="p2NicknameT" fill="#d01b1b" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P2 NICKNAME&gt;" />
+                                                <Text fx:id="p2NicknameT" fill="#707070" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.2" style="-fx-font-weight: bold;" text="&lt;P2 NICKNAME&gt;" />
                                              </children>
                                           </StackPane>
                                        </children>
