@@ -3,6 +3,7 @@ S <<<--- C
 _player_nickname
 get_games
 create_new_game
+disconnect_player
 
 S --->>> C
 ==========
@@ -10,6 +11,6 @@ _player_id
 kick_player
 disconnect_player_from_game
 prepare_window_for_game
-player_quit
+disconnect_player
 update_games
 update_players

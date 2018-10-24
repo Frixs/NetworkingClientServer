@@ -52,6 +52,13 @@ public class ConnectionFormController extends AContentController {
         nicknameTF.textProperty().addListener(new TextFieldMaxLength(nicknameTF, 19));
         serverAddressTF.textProperty().addListener(new TextFieldMaxLength(serverAddressTF, 15));
         portTF.textProperty().addListener(new TextFieldMaxLength(portTF, 5));
+
+        if (Client.SELF.nickname != null)
+            nicknameTF.setText(Client.SELF.nickname);
+        if (Client.SELF.hostAddress != null)
+            serverAddressTF.setText(Client.SELF.hostAddress);
+        if (Client.SELF.port > 0)
+            portTF.setText("" + Client.SELF.port);
     }
 
     @Override

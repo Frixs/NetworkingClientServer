@@ -195,15 +195,15 @@ void game_remove(game_t *game) {
         if (strcmp(game_list_ptr->id, id) == 0) {
             if (!previous) {
                 if (game_list_ptr->next_game == NULL) {
-                    game_destroy(game_list_ptr);
+                    _game_destroy(game_list_ptr);
                     g_game_list = NULL;
                 } else {
                     g_game_list = game_list_ptr->next_game;
-                    game_destroy(game_list_ptr);
+                    _game_destroy(game_list_ptr);
                 }
             } else {
                 previous->next_game = game_list_ptr->next_game;
-                game_destroy(game_list_ptr);
+                _game_destroy(game_list_ptr);
                 game_list_ptr = NULL;
             }
         }
@@ -223,7 +223,7 @@ void game_remove(game_t *game) {
 
 /// Free all the needed memory space to be able to delete a pointer to the game without filled memory with its data. (Delete the game).
 /// \param game
-void game_destroy(game_t *game) {
+void _game_destroy(game_t *game) {
     if (!game)
         return;
 

@@ -7,7 +7,7 @@
 
 player_t *player_create(int socket, char *nickname);
 void player_remove(player_t *player);
-void player_destroy(player_t *player);
+void _player_destroy(player_t *player);
 player_t *player_find(char *id);
 void player_add(player_t *player);
 void player_connect_to_game(player_t *player, game_t *game);

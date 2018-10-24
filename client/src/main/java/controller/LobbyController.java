@@ -74,7 +74,7 @@ public class LobbyController extends AContentController {
 
     @FXML
     void onActionDisconnectBtn(ActionEvent event) {
-        // TODO;
+        Client.SELF.sendMessage(new Message("disconnect_player"));
     }
 
     @FXML

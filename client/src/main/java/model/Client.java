@@ -1,11 +1,14 @@
 package main.java.model;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.util.Duration;
 import main.java.controller.AWindowController;
 import main.java.controller.GameController;
 import main.java.controller.LobbyController;
+import main.java.core.App;
 
 import java.awt.*;
 import java.io.*;
@@ -59,12 +62,19 @@ public class Client implements INetwork, Runnable {
      */
     public int timeout = 0;
 
-    private Client() {
-        reader = new Thread(this);
-    }
+    /**
+     * Says, if reader thread should stop the receiving cycle - method Run().
+     */
+    private boolean stopReceiving = false;
 
     public Thread getReader() {
         return reader;
+    }
+
+    /**
+     * Constructor.
+     */
+    private Client() {
     }
 
     @Override
@@ -74,6 +84,9 @@ public class Client implements INetwork, Runnable {
 
         if (!Sanitize.SELF.checkString(nickname.trim(), true, true, true, new ArrayList<>()))
             return 2;
+
+        stopReceiving = false;
+        reader = new Thread(this);
 
         this.port = iport;
         this.hostAddress = ihost;
@@ -144,8 +157,12 @@ public class Client implements INetwork, Runnable {
             }
         }
 
-        if (reader != null)
+        nullParameters();
+
+        if (reader != null) {
             reader.interrupt();
+            reader = null;
+        }
     }
 
     @Override
@@ -156,6 +173,16 @@ public class Client implements INetwork, Runnable {
         } catch (Exception e) {
             System.out.println("ERROR: Message not sent! (" + msg.getMessage() + ")");
         }
+    }
+
+    /**
+     * Null conection parameters.
+     */
+    private void nullParameters() {
+        this.id = null;
+        this.nickname = null;
+        this.hostAddress = null;
+        this.port = 0;
     }
 
     /**
@@ -171,6 +198,9 @@ public class Client implements INetwork, Runnable {
                     while ((message = in.readLine()) != null) {
                         processMessage(message);
                         message = "";
+
+                        if (stopReceiving)
+                            return;
                     }
                     timeout++;
 
@@ -179,19 +209,24 @@ public class Client implements INetwork, Runnable {
                 }
             } while (timeout < 2);
 
-            mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
             Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Disconnected from the server!", ButtonType.OK);
+                mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Lost connection to the server!", ButtonType.OK);
                 alert.showAndWait();
 //                    .filter(response -> response == ButtonType.OK)
 //                    .ifPresent(response -> System.out.println("hey!"));
             });
 
         } catch (IOException e) {
-            mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
             Platform.runLater(() -> {
+                mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Unspecified ERROR occurred on the server!", ButtonType.OK);
-                alert.showAndWait();
+                try {
+                    alert.showAndWait();
+
+                } catch (Exception ignored) {
+                    ;
+                }
             });
         }
     }
@@ -216,6 +251,10 @@ public class Client implements INetwork, Runnable {
                 case "prepare_window_for_game":
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[0], nickname, tokens[2], tokens[3], tokens[4], tokens[5]));
                     break;
+                case "disconnect_player":
+                    stopReceiving = true;
+                    Platform.runLater(() -> reqDisconnectPlayer());
+                    break;
                 default:
                     System.out.println("ERROR occurred!");
                     System.out.println("\t- Received message does not fit the format!");
@@ -225,6 +264,21 @@ public class Client implements INetwork, Runnable {
             System.out.println("ERROR occurred!");
             System.out.println("Received message does not fit the format!");
         }
+    }
+
+    /**
+     * Disconnect player on client side.
+     */
+    private void reqDisconnectPlayer() {
+        nullParameters();
+
+        mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
+
+        PauseTransition delayOverlay = new PauseTransition(Duration.seconds(App.REPAINT_DELAY_IN_SEC));
+        delayOverlay.setOnFinished(event -> {
+            disconnect();
+        });
+        delayOverlay.play();
     }
 
     /**

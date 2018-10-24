@@ -59,16 +59,16 @@ void player_remove(player_t *player) {
         if (strcmp(player_list_ptr->id, id) == 0) {
             if (!previous_player) {
                 if (player_list_ptr->next_player == NULL) {
-                    player_destroy(player_list_ptr);
+                    _player_destroy(player_list_ptr);
                     g_player_list = NULL;
                 } else {
                     g_player_list = player_list_ptr->next_player;
-                    player_destroy(player_list_ptr);
+                    _player_destroy(player_list_ptr);
                     player_list_ptr = NULL;
                 }
             } else {
                 previous_player->next_player = player_list_ptr->next_player;
-                player_destroy(player_list_ptr);
+                _player_destroy(player_list_ptr);
                 g_player_list = NULL;
             }
         }
@@ -81,7 +81,7 @@ void player_remove(player_t *player) {
     pthread_mutex_unlock(&g_player_list_mutex);
 
     message = memory_malloc(sizeof(char) * 256);
-    sprintf(message, "%s;player_quit\n", id); // Token message.
+    sprintf(message, "%s;disconnect_player\n", id); // Token message.
 
     if (is_disconnected != 1)
         svr_send(socket, message);
@@ -95,7 +95,7 @@ void player_remove(player_t *player) {
 
 /// Free all the needed memory space to be able to delete a pointer to the player without filled memory with its data. (Delete the player).
 /// \param player
-void player_destroy(player_t *player) {
+void _player_destroy(player_t *player) {
     memory_free(player->id);
     memory_free(player->nickname);
     memory_free(player);

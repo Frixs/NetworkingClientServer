@@ -15,13 +15,15 @@ import static java.lang.Thread.sleep;
 
 public class App extends Application {
 
+    public static final double REPAINT_DELAY_IN_SEC = 0.1;
+
     /**
      * What to do if application was closed
      */
     public static void shutdown() {
         Client.SELF.mainWindowController.loadContent(WindowContent.END);
 
-        PauseTransition delayOverlay = new PauseTransition(Duration.seconds(1));
+        PauseTransition delayOverlay = new PauseTransition(Duration.seconds(REPAINT_DELAY_IN_SEC));
         delayOverlay.setOnFinished(event -> {
             Client.SELF.disconnect();
             Platform.exit();

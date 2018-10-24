@@ -12,7 +12,7 @@ void game_send_current_state_info(game_t *game);
 void game_create(player_t *player, int goal);
 void game_add(game_t *game);
 void game_remove(game_t *game);
-void game_destroy(game_t *game);
+void _game_destroy(game_t *game);
 void game_multicast(game_t *game, char *message);
 //void game_free();
 //void game_print();
