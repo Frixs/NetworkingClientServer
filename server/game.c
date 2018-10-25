@@ -14,6 +14,8 @@
 #include "stats.h"
 #include "player.h"
 
+pthread_t thread_id;
+
 /// Broadcast information about available games to all players.
 void game_broadcast_update_games() {
     game_t *game_list_ptr = g_game_list;
@@ -233,6 +235,28 @@ void _game_destroy(game_t *game) {
     memory_free(game);
 }
 
+/// Start the game thread.
+/// \param game     The game.
+/// \return         Status code. 0 = success. 1 = error.
+int game_start(game_t *game) {
+    char *log_message = NULL;
+
+    thread_id = 0;
+
+    if (pthread_create(&thread_id, NULL, _game_server, (void *) game)) {
+        // Log.
+        log_message = memory_malloc(sizeof(char) * 256);
+        sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
+        write_log(log_message);
+        memory_free(log_message);
+        return 1;
+    }
+
+    game->thread = thread_id;
+
+    return 0;
+}
+
 /// Send message to all players of the game.
 /// \param game         The game.
 /// \param message      The message.
@@ -249,4 +273,11 @@ void game_multicast(game_t *game, char *message) {
             svr_send(game->players[i]->socket, message);
 
     memory_free(message);
+}
+
+/// Serve the game.
+/// \param arg      The args.
+/// \return         -
+void *_game_server(void *arg) {
+    // TODO;
 }

@@ -231,7 +231,25 @@ void *_svr_connection_handler(void *arg) {
 
         // Create a new thread to solve player data sending separately.
         thread_id = 0;
-        pthread_create(&thread_id, NULL, _svr_serve_receiving, (void *) player);
+        if (pthread_create(&thread_id, NULL, _svr_serve_receiving, (void *) player)) {
+            // Unsuccessful thread start branch.
+            // Log.
+            log_message = memory_malloc(sizeof(char) * 256);
+            sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
+            write_log(log_message);
+            memory_free(log_message);
+
+            // Send a message back to client.
+            message = memory_malloc(sizeof(char) * 256);
+            sprintf(message, "%s;player_crash\n", player->id); // Token message.
+            svr_send(player->socket, message);
+            memory_free(message);
+
+            // Remove player because of unsuccessful thread start.
+            player_remove(player);
+
+            return NULL;
+        }
 
         // Log.
         log_message = memory_malloc(sizeof(char) * 256);

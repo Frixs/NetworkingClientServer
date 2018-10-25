@@ -32,16 +32,19 @@ public class GameController extends AContentController {
     private Text p2NicknameT;
 
     @FXML
-    private ImageView p2ChoiceIW;
+    private ImageView p2ChoiceIV;
 
     @FXML
-    private ImageView p1ChoiceIW;
+    private ImageView p1ChoiceIV;
 
     @FXML
     private StackPane yourTurnPane;
 
     @FXML
     private StackPane anotherPlayerTurnPane;
+
+    private ArrayList<Text> pNicknameTList = null;
+    private ArrayList<ImageView> pChoiceIVList = null;
 
     /**
      * no-args constructor
@@ -54,6 +57,13 @@ public class GameController extends AContentController {
      */
     @FXML
     private void initialize() {
+        pNicknameTList = new ArrayList<>();
+        pNicknameTList.add(p1NicknameT);
+        pNicknameTList.add(p2NicknameT);
+
+        pChoiceIVList = new ArrayList<>();
+        pChoiceIVList.add(p1ChoiceIV);
+        pChoiceIVList.add(p2ChoiceIV);
     }
 
     @Override
@@ -68,9 +78,9 @@ public class GameController extends AContentController {
      */
     public void setWindow(Game g) {
         p1NicknameT.setText("- - -");
-        p1ChoiceIW.setImage(null);
+        p1ChoiceIV.setImage(null);
         p2NicknameT.setText("- - -");
-        p2ChoiceIW.setImage(null);
+        p2ChoiceIV.setImage(null);
         gameNameT.setText(g.getName());
         goalT.setText("Goal: " + g.getGoal());
         scoreT.setText("0 : 0");
@@ -85,7 +95,7 @@ public class GameController extends AContentController {
      * @param list Player list.
      */
     public void updatePlayers(ArrayList<Player> list) {
-        int i = 1;
+        int i;
 
         // Set default first.
         p1NicknameT.setText("- - -");
@@ -94,22 +104,17 @@ public class GameController extends AContentController {
         p2NicknameT.setFill(Color.valueOf("707070"));
 
         // Set UI by player values.
-        for (Player p : list) {
-            switch (i) {
-                case 1:
-                    p1NicknameT.setText(p.getNickname());
-                    p1NicknameT.setFill(p.getColor());
-                    break;
-                case 2:
-                    p2NicknameT.setText(p.getNickname());
-                    p2NicknameT.setFill(p.getColor());
-                    break;
-                default:
-                    System.out.println("ERROR occurred!");
-                    System.out.println("There are more players in the game than expected!");
-            }
+        for (i = 0; i < pNicknameTList.size(); i++) {
+            if (list.size() <= i)
+                break;
 
-            i++;
+            pNicknameTList.get(i).setText(list.get(i).getNickname());
+            pNicknameTList.get(i).setFill(list.get(i).getColor());
+        }
+
+        if (list.size() > pNicknameTList.size()) {
+            System.out.println("ERROR occurred!");
+            System.out.println("There are more players in the game than expected!");
         }
     }
 

@@ -163,7 +163,7 @@ void player_connect_to_game(player_t *player, game_t *game) {
     if (!player || !game)
         return;
 
-    int i;
+    int i, j;
     char *message = NULL;
     char *log_message = NULL;
 
@@ -192,8 +192,21 @@ void player_connect_to_game(player_t *player, game_t *game) {
     write_log(log_message);
 
     game_send_update_players(game);
-    if (game->player_count == PLAYER_COUNT)
+    if (game->player_count == PLAYER_COUNT) {
         game_broadcast_update_games();
+
+        if (game_start(game)) { // If the game cannot start a thread for it.
+            log_message = memory_malloc(sizeof(char) * 256);
+            sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
+            write_log(log_message);
+            memory_free(log_message);
+
+            for (j = 0; j < game->player_count; ++j) {
+                player_disconnect_from_game(game->players[j], game);
+            }
+            game_remove(game);
+        }
+    }
 
     memory_free(message);
     memory_free(log_message);

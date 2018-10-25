@@ -129,7 +129,7 @@
                                  <children>
                                     <StackPane maxHeight="150.0" maxWidth="150.0" prefHeight="150.0" prefWidth="150.0" style="-fx-background-color: #dedede;">
                                        <children>
-                                          <ImageView fx:id="p2ChoiceIW" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
+                                          <ImageView fx:id="p2ChoiceIV" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
                                        </children>
                                     </StackPane>
                                  </children>
@@ -144,7 +144,7 @@
                                  <children>
                                     <StackPane maxHeight="150.0" maxWidth="150.0" prefHeight="150.0" prefWidth="150.0" style="-fx-background-color: #dedede;">
                                        <children>
-                                          <ImageView fx:id="p1ChoiceIW" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
+                                          <ImageView fx:id="p1ChoiceIV" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER" />
                                        </children>
                                     </StackPane>
                                  </children>

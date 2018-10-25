@@ -64,6 +64,12 @@ public class Client implements INetwork, Runnable {
 
     /**
      * Says, if reader thread should stop the receiving cycle - method Run().
+     * ----------
+     * Manual use:
+     * ---
+     * We want to terminate the thread before the thread will go to wait to another message from the server again.
+     * If we did not do that, the client would try to read some message until timeout and then alert us to an unexpected server error.
+     * Because the disconnect method nulls "in" and "out" parameter while the thread is still trying to receive message.
      */
     private boolean stopReceiving = false;
 
@@ -242,6 +248,9 @@ public class Client implements INetwork, Runnable {
             // Token list which is acceptable from server side.
             // List of events which client accepts from server side.
             switch (tokens[1]) {
+                case "player_crash":
+                    Platform.runLater(() -> reqPlayerCrash());
+                    break;
                 case "update_players":
                     Platform.runLater(() -> reqUpdatePlayers(tokens));
                     break;
@@ -252,9 +261,6 @@ public class Client implements INetwork, Runnable {
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[2], tokens[3], tokens[4]));
                     break;
                 case "disconnect_player":
-                    // We want to terminate the thread before the thread will go to wait to another message from the server again.
-                    // If we did not do that, the client would try to read some message until timeout and then alert us to an unexpected server error.
-                    // Because the disconnect method nulls "in" and "out" parameter while the thread is still trying to receive message.
                     stopReceiving = true;
 
                     Platform.runLater(() -> reqDisconnectPlayer());
@@ -268,6 +274,13 @@ public class Client implements INetwork, Runnable {
             System.out.println("ERROR occurred!");
             System.out.println("Received message does not fit the format!");
         }
+    }
+
+    /**
+     * Unexpected problem occurs on server during player serve.
+     */
+    private void reqPlayerCrash() {
+        reqDisconnectPlayer();
     }
 
     /**

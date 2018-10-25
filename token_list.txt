@@ -8,6 +8,7 @@ disconnect_player
 S --->>> C
 ==========
 _player_id
+player_crash
 kick_player
 disconnect_player_from_game
 prepare_window_for_game
