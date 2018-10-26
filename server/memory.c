@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "memory.h"
 
 // Global variables.
@@ -16,8 +17,17 @@ void *memory_malloc(size_t size) {
     if (!size)
         return NULL;
 
+    void *m = NULL;
+
     m_current_allocation_count++;
-    return malloc(size);
+
+    m = malloc(size);
+    while (m == NULL) {
+        sleep(1);
+        m = malloc(size);
+    }
+
+    return m;
 }
 
  /// Custom free function for better debug memory allocation.
