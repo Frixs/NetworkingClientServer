@@ -135,7 +135,7 @@ void *_svr_serve_receiving(void *arg) {
 
     while ((read_size = (int) recv(client_sock, cbuf, 1024 * sizeof(char), 0)) != 0) { // 0 = closed connection, -1 = unsuccessful, >0 = length of the received message.
         if (read_size == -1) { // Unsuccessful (lost connection)
-            if (player_ptr->game && player_ptr->game->player_on_turn == player_ptr) { // If player is in a game and the player is on its turn.
+            if (player_ptr->game) { // If player is in a game.
                 if (timeout > 0) {
                     // Send a message back to client.
                     message = memory_malloc(sizeof(char) * 256);
@@ -383,6 +383,8 @@ void _svr_process_request(char *message) {
             game_broadcast_update_games();
         } else if (strcmp(tokens[1], "create_new_game") == 0 && tokens[2]) {
             game_create(player, atoi(tokens[2]));
+        } else if (strcmp(tokens[1], "join_player_to_game") == 0 && tokens[2]) {
+            player_connect_to_game(player, game_find(tokens[2]));
         } else if (strcmp(tokens[1], "disconnect_player") == 0) {
             if (player)
                 player_remove(player);

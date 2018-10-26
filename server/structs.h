@@ -33,9 +33,9 @@ typedef struct thegame {
     int goal;
     player_t *players[2];
     int player_count;
-    player_t *player_on_turn;
+    int in_progress;
     pthread_t thread;
-    sem_t sem_play;
+    sem_t sem_on_turn;
     struct thegame *next_game;
 } game_t;
 

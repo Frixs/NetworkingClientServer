@@ -54,8 +54,10 @@ public class LobbyController extends AContentController {
      * @param game  The game.
      */
     private void joinTheGame(Game game) {
-        // TODO;
-        System.out.println("TODO");
+        if (game == null)
+            return;
+
+        Client.SELF.sendMessage(new Message("join_player_to_game;"+ game.getId())); // Token message.
     }
 
     @FXML

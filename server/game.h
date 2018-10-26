@@ -5,7 +5,7 @@
 #ifndef SERVER_GAME_H
 #define SERVER_GAME_H
 
-//game_t *game_find(char *id);
+game_t *game_find(char *id);
 void game_broadcast_update_games();
 void game_send_update_players(game_t *game);
 void game_send_current_state_info(game_t *game);
@@ -15,7 +15,8 @@ void game_remove(game_t *game);
 void _game_destroy(game_t *game);
 int game_start(game_t *game);
 void game_multicast(game_t *game, char *message);
-void *_game_server(void *arg);
+void *_game_serve(void *arg);
+void _game_evaluate(game_t *g);
 //void game_free();
 //void game_print();
 

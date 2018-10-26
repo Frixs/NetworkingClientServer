@@ -188,7 +188,7 @@ void player_connect_to_game(player_t *player, game_t *game) {
     svr_send(player->socket, message);
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "\t> Player (ID: %s) joined to the game (ID: %s).\n", player->id, game->id);
+    sprintf(log_message, "\t> Player %s (ID: %s) joined to the game (ID: %s).\n", player->nickname, player->id, game->id);
     write_log(log_message);
 
     game_send_update_players(game);
@@ -232,9 +232,8 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
         }
     }
 
-    if (player == game->player_on_turn) {
-        sem_post(&game->sem_play);
-    }
+    if (game->in_progress)
+        sem_post(&game->sem_on_turn);
 
     game_broadcast_update_games();
 

@@ -68,7 +68,6 @@ public class GameController extends AContentController {
 
     @Override
     public void afterInitialize() {
-
     }
 
     /**
@@ -135,11 +134,6 @@ public class GameController extends AContentController {
 
     @FXML
     void onActionLeaveBtn(ActionEvent event) {
-
-    }
-
-    @FXML
-    void onActionQuitBtn(ActionEvent event) {
 
     }
 }

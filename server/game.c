@@ -16,6 +16,31 @@
 
 pthread_t thread_id;
 
+void _game_evaluate(game_t *g);
+
+/// Find the game in the game list.
+/// \param id       Id of the game.
+/// \return         The game struct or NULL.
+game_t *game_find(char *id) {
+    pthread_mutex_lock(&g_game_list_mutex);
+
+    if (g_game_list != NULL) {
+        game_t *game_ptr = g_game_list;
+
+        do {
+            if (strcmp(game_ptr->id, id) == 0) {
+                pthread_mutex_unlock(&g_game_list_mutex);
+                return game_ptr;
+            }
+
+            game_ptr = game_ptr->next_game;
+
+        } while (game_ptr != NULL);
+    }
+
+    pthread_mutex_unlock(&g_game_list_mutex);
+}
+
 /// Broadcast information about available games to all players.
 void game_broadcast_update_games() {
     game_t *game_list_ptr = g_game_list;
@@ -29,7 +54,7 @@ void game_broadcast_update_games() {
 
     if (g_game_list != NULL) {
         do {
-            if (!game_list_ptr->player_on_turn && game_list_ptr->player_count < PLAYER_COUNT)
+            if (game_list_ptr->player_count < PLAYER_COUNT)
                 sprintf(message, "%s;%s;%s;%d", message, game_list_ptr->name, game_list_ptr->id, game_list_ptr->goal);
 
             game_list_ptr = game_list_ptr->next_game;
@@ -92,7 +117,7 @@ void game_send_current_state_info(game_t *game) {
     if (game->player_count == 1) {
         state = 1;
 
-        if (game->player_on_turn != NULL) { // If the game is in progress and there is only 1 player.
+        if (game->in_progress) { // If the game is in progress and there is only 1 player.
             state = 0;
 
             sprintf(message, "%s;win\n", player->id);
@@ -134,9 +159,8 @@ void game_create(player_t *player, int goal) {
     else
         game->goal = GOAL_DEFAULT;
 
-    sem_init(&(game->sem_play), 0, 0);
-
-    game->player_on_turn = NULL;
+    sem_init(&(game->sem_on_turn), 0, 0);
+    game->in_progress = 0;
 
     for (i = 0; i < PLAYER_COUNT; ++i)
         game->players[i] = NULL;
@@ -231,7 +255,7 @@ void _game_destroy(game_t *game) {
 
     memory_free(game->id);
     memory_free(game->name);
-    sem_destroy(&(game->sem_play));
+    sem_destroy(&(game->sem_on_turn));
     memory_free(game);
 }
 
@@ -243,7 +267,7 @@ int game_start(game_t *game) {
 
     thread_id = 0;
 
-    if (pthread_create(&thread_id, NULL, _game_server, (void *) game)) {
+    if (!game || pthread_create(&thread_id, NULL, _game_serve, (void *) game)) {
         // Log.
         log_message = memory_malloc(sizeof(char) * 256);
         sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
@@ -253,6 +277,7 @@ int game_start(game_t *game) {
     }
 
     game->thread = thread_id;
+    game->in_progress = 1;
 
     return 0;
 }
@@ -278,6 +303,38 @@ void game_multicast(game_t *game, char *message) {
 /// Serve the game.
 /// \param arg      The args.
 /// \return         -
-void *_game_server(void *arg) {
+void *_game_serve(void *arg) {
+    if (!arg)
+        return NULL;
+
+    game_t *game = NULL;
+    char *message = NULL;
+
+    game = (game_t *) arg;
+
+    while (game->in_progress) {
+        for (int i = 0; i < game->player_count; ++i) {
+            message = memory_malloc(sizeof(char) * 256);
+            memset(message, 0, strlen(message));
+            sprintf(message, "%s;on_turn\n", game->players[i]->id);
+            memory_free(message);
+            
+            svr_send(game->players[i]->socket, message);
+        }
+
+        // Wait until all players play.
+        sem_wait(&game->sem_on_turn);
+
+        // Evaluate game round.
+        _game_evaluate(game);
+    }
+
+    return NULL;
+}
+
+/// Evalutate game after turn.
+/// \param g        The game.
+void _game_evaluate(game_t *g) {
     // TODO;
+    printf("TODO");
 }

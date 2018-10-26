@@ -104,7 +104,8 @@ public class Client implements INetwork, Runnable {
 
         // Create a new socket.
         try {
-            this.socket = new Socket(this.hostAddress, this.port);
+            if (this.socket == null)
+                this.socket = new Socket(this.hostAddress, this.port);
             this.socket.setSoTimeout(15000); // 15 sec.
 
             System.out.println("Connecting to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + " ...");
@@ -249,6 +250,8 @@ public class Client implements INetwork, Runnable {
             // List of events which client accepts from server side.
             switch (tokens[1]) {
                 case "player_crash":
+                    if (!tokens[0].equals(this.id))
+                        break;
                     Platform.runLater(() -> reqPlayerCrash());
                     break;
                 case "update_players":
@@ -261,8 +264,9 @@ public class Client implements INetwork, Runnable {
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[2], tokens[3], tokens[4]));
                     break;
                 case "disconnect_player":
+                    if (!tokens[0].equals(this.id))
+                        break;
                     stopReceiving = true;
-
                     Platform.runLater(() -> reqDisconnectPlayer());
                     break;
                 default:
@@ -277,7 +281,7 @@ public class Client implements INetwork, Runnable {
     }
 
     /**
-     * Unexpected problem occurs on server during player serve.
+     * REQ: Unexpected problem occurs on server during player serve.
      */
     private void reqPlayerCrash() {
         reqDisconnectPlayer();

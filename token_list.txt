@@ -3,6 +3,7 @@ S <<<--- C
 _player_nickname
 get_games
 create_new_game
+join_player_to_game
 disconnect_player
 
 S --->>> C
