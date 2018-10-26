@@ -13,10 +13,9 @@
 #include "memory.h"
 #include "stats.h"
 #include "player.h"
+#include "game_logic.h"
 
 pthread_t thread_id;
-
-void _game_evaluate(game_t *g);
 
 /// Find the game in the game list.
 /// \param id       Id of the game.
@@ -120,7 +119,7 @@ void game_send_current_state_info(game_t *game) {
         if (game->in_progress) { // If the game is in progress and there is only 1 player.
             state = 0;
 
-            sprintf(message, "%s;win\n", player->id);
+            sprintf(message, "%s;set_player_win;%s\n", player->id, player->nickname); // Token message.
             game_multicast(game, message);
         }
     } else if (game->player_count < PLAYER_COUNT) {
@@ -128,7 +127,7 @@ void game_send_current_state_info(game_t *game) {
     }
 
     if (player != NULL && state > 0) {
-        sprintf(message, "%s;game_state;%d\n", player->id, state);
+        sprintf(message, "%s;game_state;%d\n", player->id, state); // Token message.
         game_multicast(game, message);
     }
 }
@@ -312,29 +311,24 @@ void *_game_serve(void *arg) {
 
     game = (game_t *) arg;
 
-    while (game->in_progress) {
+    while (game->in_progress && game->player_count == PLAYER_COUNT) {
         for (int i = 0; i < game->player_count; ++i) {
+            game_logic_prepare_player_turn(game->players[i]);
             message = memory_malloc(sizeof(char) * 256);
             memset(message, 0, strlen(message));
             sprintf(message, "%s;on_turn\n", game->players[i]->id);
-            memory_free(message);
-            
             svr_send(game->players[i]->socket, message);
+            memory_free(message);
         }
 
         // Wait until all players play.
         sem_wait(&game->sem_on_turn);
 
         // Evaluate game round.
-        _game_evaluate(game);
+        game_logic_evaluate(game);
     }
 
-    return NULL;
-}
+    game->in_progress = 0;
 
-/// Evalutate game after turn.
-/// \param g        The game.
-void _game_evaluate(game_t *g) {
-    // TODO;
-    printf("TODO");
+    return NULL;
 }

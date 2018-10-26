@@ -47,6 +47,7 @@ public class LobbyController extends AContentController {
 
     @Override
     public void afterInitialize() {
+        Client.SELF.sendMessage(new Message("get_games")); // Token message.
     }
 
     /**

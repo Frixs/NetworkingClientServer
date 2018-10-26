@@ -14,6 +14,7 @@
 #include "server.h"
 #include "memory.h"
 #include "game.h"
+#include "game_logic.h"
 
 time_t time_initial, time_current;
 player_t *g_player_list;
@@ -24,8 +25,6 @@ pthread_t thread_id;
 
 // Struct to be able to set timeout of socket.
 struct timeval timeout;
-
-char **_svr_split_message(char *message);
 
 /// Send the message to entered socket and write the message to statistics.
 /// \param socket       Socket where the message is sent.
@@ -134,9 +133,9 @@ void *_svr_serve_receiving(void *arg) {
     char *message = NULL;
 
     while ((read_size = (int) recv(client_sock, cbuf, 1024 * sizeof(char), 0)) != 0) { // 0 = closed connection, -1 = unsuccessful, >0 = length of the received message.
-        if (read_size == -1) { // Unsuccessful (lost connection)
+        if (read_size == -1) { // Unsuccessful (some error occurred).
             if (player_ptr->game) { // If player is in a game.
-                if (timeout > 0) {
+                if (timeout > LOST_CONNECTION_TIMEOUT) {
                     // Send a message back to client.
                     message = memory_malloc(sizeof(char) * 256);
                     sprintf(message, "%s;kick_player\n", player_ptr->id); // Token message.
@@ -163,10 +162,10 @@ void *_svr_serve_receiving(void *arg) {
         }
     }
 
-    // If the connection is lost - player_disconnect_from_game & remove the player.
+    // If the connection is lost.
     player_ptr = player_find(id);
     if (player_ptr) {
-        player_ptr->is_disconnected = 1;
+        player_ptr->is_disconnected = 1; // Means, do not bother with updating client. Client is already closed or do not have connection.
 
         if (player_ptr->game) {
             player_disconnect_from_game(player_ptr, player_ptr->game);
@@ -190,6 +189,7 @@ void *_svr_connection_handler(void *arg) {
     char *log_message = NULL;
     char *nickname = NULL;
     char *message = NULL;
+    int is_reconnecting = 0; // Check if user is connecting first time or he is reconnecting.
 
     // Fill the msg var with zeros.
     memset(msg, 0, strlen(msg));
@@ -208,8 +208,24 @@ void *_svr_connection_handler(void *arg) {
         messages_bad++;
     }
 
-    // If the message from client contains nickname
-    if (tokens != NULL && strcmp(tokens, "_player_nickname") == 0) {
+    if (tokens != NULL && strcmp(tokens, "_player_reconnect") == 0) { // Client is trying to reconnect.
+        is_reconnecting = 1;
+        player = player_find(id);
+    }
+
+    // Client is trying to connect to server...
+    if (tokens != NULL && is_reconnecting && player != NULL) { // Client is trying to reconnect.
+        player->is_disconnected = 0; // Reset, client is back.
+
+        // Send a message back to client.
+        message = memory_malloc(sizeof(char) * 256);
+        sprintf(message, "%s;_player_id_reconnected\n", player->id); // Token message.
+        svr_send(player->socket, message);
+        memory_free(message);
+
+    } else if ((tokens != NULL && is_reconnecting) || (tokens != NULL && strcmp(tokens, "_player_nickname") == 0)) { // Client is firstly connecting to the server.
+        is_reconnecting = 0;
+
         nickname = strtok(NULL, ";");
 
         if (!nickname) {
@@ -229,33 +245,6 @@ void *_svr_connection_handler(void *arg) {
         // Add player to the list.
         player_add(player);
 
-        // Create a new thread to solve player data sending separately.
-        thread_id = 0;
-        if (pthread_create(&thread_id, NULL, _svr_serve_receiving, (void *) player)) {
-            // Unsuccessful thread start branch.
-            // Log.
-            log_message = memory_malloc(sizeof(char) * 256);
-            sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
-            write_log(log_message);
-            memory_free(log_message);
-
-            // Send a message back to client.
-            message = memory_malloc(sizeof(char) * 256);
-            sprintf(message, "%s;player_crash\n", player->id); // Token message.
-            svr_send(player->socket, message);
-            memory_free(message);
-
-            // Remove player because of unsuccessful thread start.
-            player_remove(player);
-
-            return NULL;
-        }
-
-        // Log.
-        log_message = memory_malloc(sizeof(char) * 256);
-        sprintf(log_message, "\t> Player %s (ID: %s) connected!\n", player->nickname, player->id);
-        write_log(log_message);
-        memory_free(log_message);
     } else {
         // Log.
         log_message = memory_malloc(sizeof(char) * 256);
@@ -264,8 +253,45 @@ void *_svr_connection_handler(void *arg) {
         memory_free(log_message);
 
         messages_bad++;
+
+        // Free.
+        memory_free(arg);
+
+        return NULL;
     }
 
+    // Create a new thread to solve player data sending separately.
+    thread_id = 0;
+    if (pthread_create(&thread_id, NULL, _svr_serve_receiving, (void *) player)) {
+        // Unsuccessful thread start branch.
+        // Log.
+        log_message = memory_malloc(sizeof(char) * 256);
+        sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
+        write_log(log_message);
+        memory_free(log_message);
+
+        // Send a message back to client.
+        message = memory_malloc(sizeof(char) * 256);
+        sprintf(message, "%s;player_crash\n", player->id); // Token message.
+        svr_send(player->socket, message);
+        memory_free(message);
+
+        // Remove player because of unsuccessful thread start.
+        player_remove(player);
+
+        return NULL;
+    }
+
+    // Log.
+    log_message = memory_malloc(sizeof(char) * 256);
+    if (is_reconnecting)
+        sprintf(log_message, "\t> Player %s (ID: %s) reconnected!\n", player->nickname, player->id);
+    else
+        sprintf(log_message, "\t> Player %s (ID: %s) connected!\n", player->nickname, player->id);
+    write_log(log_message);
+    memory_free(log_message);
+
+    // Free.
     memory_free(arg);
 
     return NULL;
@@ -381,13 +407,30 @@ void _svr_process_request(char *message) {
     if (tokens[1]) {
         if (strcmp(tokens[1], "get_games") == 0) {
             game_broadcast_update_games();
+
         } else if (strcmp(tokens[1], "create_new_game") == 0 && tokens[2]) {
             game_create(player, atoi(tokens[2]));
+
         } else if (strcmp(tokens[1], "join_player_to_game") == 0 && tokens[2]) {
-            player_connect_to_game(player, game_find(tokens[2]));
+            if (player_connect_to_game(player, game_find(tokens[2]))) {
+                // If player cannot join the game.
+                char *msg = NULL;
+                msg = memory_malloc(sizeof(char) * 256);
+                sprintf(msg, "%s;cannot_join_game\n", player->id); // Token message.
+                svr_send(player->socket, msg);
+                memory_free(msg);
+            }
+
         } else if (strcmp(tokens[1], "disconnect_player") == 0) {
             if (player)
                 player_remove(player);
+
+        } else if (strcmp(tokens[1], "disconnect_player_from_game") == 0 && tokens[2]) {
+            player_disconnect_from_game(player, game_find(tokens[2]));
+
+        } else if (strcmp(tokens[1], "game_choice_selected") == 0 && tokens[2]) {
+            game_logic_record_turn(player, atoi(tokens[2]));
+
         } else {
             _svr_count_bad_message(message);
         }

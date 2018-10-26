@@ -1,18 +1,26 @@
 S <<<--- C
 ==========
 _player_nickname
+_player_reconnect
 get_games
 create_new_game
 join_player_to_game
 disconnect_player
+disconnect_player_from_game
+game_choice_selected
 
 S --->>> C
 ==========
 _player_id
+_player_id_reconnected
 player_crash
+cannot_join_game
 kick_player
-disconnect_player_from_game
+leave_game
 prepare_window_for_game
 disconnect_player
 update_games
 update_players
+set_player_win
+game_state
+evaluate_game

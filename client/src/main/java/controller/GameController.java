@@ -6,7 +6,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import main.java.model.Client;
 import main.java.model.Game;
+import main.java.model.Message;
 import main.java.model.Player;
 
 import java.util.ArrayList;
@@ -71,6 +73,20 @@ public class GameController extends AContentController {
     }
 
     /**
+     * Switch player control panels.
+     * @param bShow     Check if you should show choice panel or hide it.
+     */
+    public void setChoicePanel(boolean bShow) {
+        if (bShow) {
+            yourTurnPane.setVisible(true);
+            anotherPlayerTurnPane.setVisible(false);
+        } else {
+            yourTurnPane.setVisible(false);
+            anotherPlayerTurnPane.setVisible(true);
+        }
+    }
+
+    /**
      * Set player to GUI.
      *
      * @param g The game.
@@ -84,8 +100,7 @@ public class GameController extends AContentController {
         goalT.setText("Goal: " + g.getGoal());
         scoreT.setText("0 : 0");
 
-        yourTurnPane.setVisible(false);
-        anotherPlayerTurnPane.setVisible(true);
+        setChoicePanel(false);
     }
 
     /**
@@ -118,22 +133,31 @@ public class GameController extends AContentController {
     }
 
     @FXML
-    void onActionChoosePaperBtn(ActionEvent event) {
+    void onActionLeaveBtn(ActionEvent event) {
+        Client.SELF.sendMessage(new Message("disconnect_player_from_game")); // Token message.
+    }
 
+    @FXML
+    void onActionChoosePaperBtn(ActionEvent event) {
+        sendChoice(2);
     }
 
     @FXML
     void onActionChooseRockBtn(ActionEvent event) {
-
+        sendChoice(1);
     }
 
     @FXML
     void onActionChooseScissorsBtn(ActionEvent event) {
-
+        sendChoice(3);
     }
 
-    @FXML
-    void onActionLeaveBtn(ActionEvent event) {
+    private void sendChoice(int choice) {
+        if (choice > 0)
+            return;
 
+        setChoicePanel(false);
+
+        Client.SELF.sendMessage(new Message("game_choice_selected;" + choice)); // Token message.
     }
 }

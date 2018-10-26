@@ -14,6 +14,7 @@
 #include "constants.h"
 #include "game.h"
 #include "colors.h"
+#include "game_logic.h"
 
 /// Create a player struct.
 /// \param socket       Socket number.
@@ -25,11 +26,12 @@ player_t *player_create(int socket, char *nickname) {
     p->nickname = memory_malloc(50 * sizeof(char));
     sprintf(p->nickname, "%s", nickname);
 
-    p->socket               = socket;
-    p->is_disconnected      = 0;
-    p->id                   = svr_generate_id();
+    p->choice = 0;
+    p->socket = socket;
+    p->is_disconnected = 0;
+    p->id = svr_generate_id();
     p->next_player = NULL;
-    p->game                 = NULL;
+    p->game = NULL;
 
     return p;
 }
@@ -159,36 +161,53 @@ void player_add(player_t *player) {
 /// Connects a player to a game.
 /// \param player       The player.
 /// \param game         The game.
-void player_connect_to_game(player_t *player, game_t *game) {
+/// \return             Status code. 0 = Success, 1 = Error.
+int player_connect_to_game(player_t *player, game_t *game) {
     if (!player || !game)
-        return;
+        return 1;
 
     int i, j;
+    int is_reconnecting = 0;
     char *message = NULL;
     char *log_message = NULL;
 
-    if (game->player_count >= PLAYER_COUNT)
-        return;
-
+    // Check for reconnection.
     for (i = 0; i < PLAYER_COUNT; ++i) {
-        if (game->players[i] != NULL)
-            continue;
+        if (player == game->players[i]) {
+            is_reconnecting = 1;
+            break;
+        }
+    }
 
-        game->players[i] = player;
-        player->color = g_color_list[i];
-        game->player_count++;
-        player->game = game;
-        break;
+    if (!is_reconnecting) {
+        if (game->player_count >= PLAYER_COUNT)
+            return 1;
+
+        for (i = 0; i < PLAYER_COUNT; ++i) {
+            if (game->players[i] != NULL)
+                continue;
+
+            game->players[i] = player;
+            player->color = g_color_list[i];
+            game->player_count++;
+            player->game = game;
+            break;
+        }
+
+        game_logic_prepare_player_on_game_join(player); // Only for new players /We do not want to reset score to rejoined player f.e.
     }
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "%s;prepare_window_for_game;%s;%s;%d\n", player->id, game->id, game->name, game->goal); // Token message.
-
+    sprintf(message, "%s;prepare_window_for_game;%s;%s;%d\n", player->id, game->id, game->name,
+            game->goal); // Token message.
     svr_send(player->socket, message);
 
     log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "\t> Player %s (ID: %s) joined to the game (ID: %s).\n", player->nickname, player->id, game->id);
+    if (is_reconnecting)
+        sprintf(log_message, "\t> Player %s (ID: %s) returned to the game (ID: %s).\n", player->nickname, player->id, game->id);
+    else
+        sprintf(log_message, "\t> Player %s (ID: %s) joined to the game (ID: %s).\n", player->nickname, player->id, game->id);
     write_log(log_message);
 
     game_send_update_players(game);
@@ -210,6 +229,8 @@ void player_connect_to_game(player_t *player, game_t *game) {
 
     memory_free(message);
     memory_free(log_message);
+
+    return 0;
 }
 
 /// Disconnects a player from its current game.
@@ -228,6 +249,7 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
             game->players[i] = NULL;
             game->player_count--;
             player->game = NULL;
+            player->color = NULL;
             break;
         }
     }
@@ -246,19 +268,19 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
 
     // Send a message back to client.
     message = memory_malloc(sizeof(char) * 256);
-    sprintf(message, "%s;disconnect_player_from_game\n", player->id); // Token message.
+    sprintf(message, "%s;leave_game\n", player->id); // Token message.
 
+    // Do not disconnect the player who lost a connection.
     if (player->is_disconnected != 1)
         svr_send(player->socket, message);
 
+    // If there is no player, remove the game. Or update information.
     if (game->player_count == 0) {
         game_remove(game);
-        memory_free(message);
     } else {
-        game_multicast(game, message);
         game_send_update_players(game);
         game_send_current_state_info(game);
     }
 
-    player->color = NULL;
+    memory_free(message);
 }

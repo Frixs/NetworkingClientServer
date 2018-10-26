@@ -10,6 +10,7 @@ import javafx.util.Duration;
 import main.java.core.App;
 import main.java.model.Client;
 import main.java.listener.change.TextFieldMaxLength;
+import main.java.model.Message;
 import main.java.model.Sanitize;
 import main.java.model.WindowContent;
 
@@ -117,6 +118,12 @@ public class ConnectionFormController extends AContentController {
 
                     if (connStatus == 0) { // Successful connection.
                         getWindowController().loadContent(WindowContent.LOBBY);
+
+                    } else if (connStatus == -1) { // Reconnect.
+                        if (Client.SELF.gameId == null)
+                            getWindowController().loadContent(WindowContent.LOBBY);
+                        else
+                            Client.SELF.sendMessage(new Message("join_player_to_game")); // Token message.
 
                     } else { // Handle error.
                         switch (connStatus) {

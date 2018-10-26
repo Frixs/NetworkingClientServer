@@ -10,10 +10,11 @@ public interface INetwork {
      * @param iport         Internet host port number.
      * @param nickname      Nickname with which you are joining in.
      * @return              Status code.
-     *                          0 = OK.
-     *                          1 = Cannot connect to server.
-     *                          2 = Wrong inputs.
-     *                          3 = Error during connection.
+     *                          -1 = OK - Reconnected.
+     *                           0 = OK.
+     *                           1 = Cannot connect to server.
+     *                           2 = Wrong inputs.
+     *                           3 = Error during connection.
      */
     public int connect(String ihost, int iport, String nickname);
 

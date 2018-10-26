@@ -21,7 +21,7 @@ typedef struct theplayer {
     char *color;
     int score;
     int has_selected;
-    choice_t *choice;
+    int choice;
     struct theplayer *next_player;
     struct thegame *game;
 

@@ -121,8 +121,13 @@ public class Client implements INetwork, Runnable {
             return 1;
 
         // Send client nickname to server to be able to identify the client.
-        sendMessage(new Message("1;_player_nickname;" + this.nickname)); // Token message.
+        if (this.id == null) {
+            sendMessage(new Message("1;_player_nickname;" + this.nickname)); // Token message.
+        } else { // If the user is trying to reconnect.
+            sendMessage(new Message("_player_reconnect;" + this.nickname)); // Token message.
+        }
 
+        // Wait for server response.
         try {
             String message;
 
@@ -131,6 +136,8 @@ public class Client implements INetwork, Runnable {
 
                 if (tokens.length > 1 && tokens[1].compareTo("_player_id") == 0)
                     this.id = tokens[0].trim();
+                else if (tokens.length > 1 && tokens[1].compareTo("_player_id_reconnected") == 0)
+                    return -1; // Reconnected.
                 else
                     return 3;
             }
@@ -254,21 +261,52 @@ public class Client implements INetwork, Runnable {
                         break;
                     Platform.runLater(() -> reqPlayerCrash());
                     break;
+
+                case "kick_player":
+                    // TODO;
+                    break;
+
+                case "set_player_win":
+                    // TODO;
+                    break;
+
                 case "update_players":
                     Platform.runLater(() -> reqUpdatePlayers(tokens));
                     break;
+
                 case "update_games":
                     Platform.runLater(() -> reqUpdateGames(tokens));
                     break;
+
                 case "prepare_window_for_game":
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[2], tokens[3], tokens[4]));
                     break;
+
                 case "disconnect_player":
                     if (!tokens[0].equals(this.id))
                         break;
                     stopReceiving = true;
                     Platform.runLater(() -> reqDisconnectPlayer());
                     break;
+
+                case "on_turn":
+                    Platform.runLater(() -> reqOnTurn());
+                    break;
+
+                case "evaluate_game":
+                    Platform.runLater(() -> reqEvaluateGame());
+                    break;
+
+                case "leave_game":
+                    if (!tokens[0].equals(this.id))
+                        break;
+                    Platform.runLater(() -> reqLeaveGame());
+                    break;
+
+                case "cannot_join_game":
+                    Platform.runLater(() -> reqCannotJoinGame());
+                    break;
+
                 default:
                     System.out.println("ERROR occurred!");
                     System.out.println("\t- Received message does not fit the format!");
@@ -278,6 +316,40 @@ public class Client implements INetwork, Runnable {
             System.out.println("ERROR occurred!");
             System.out.println("Received message does not fit the format!");
         }
+    }
+
+    /**
+     * Cannot join the game. Solve it.
+     */
+    private void reqCannotJoinGame() {
+        if ((mainWindowController.getCurrentContentController() instanceof LobbyController))
+            return;
+
+        mainWindowController.loadContent(WindowContent.LOBBY);
+    }
+
+    /**
+     * TODO;
+     */
+    private void reqEvaluateGame() {
+    }
+
+    /**
+     * Leave the game window.
+     */
+    private void reqLeaveGame() {
+        mainWindowController.loadContent(WindowContent.LOBBY);
+        this.gameId = null;
+    }
+
+    /**
+     * REQ: On turn update.
+     */
+    private void reqOnTurn() {
+        if (!(mainWindowController.getCurrentContentController() instanceof GameController))
+            return;
+
+        ((GameController) mainWindowController.getCurrentContentController()).setChoicePanel(true);
     }
 
     /**
@@ -386,6 +458,7 @@ public class Client implements INetwork, Runnable {
             ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().add(g.toString());
         }
 
+        // Reset timeout.
         timeout = 0;
     }
 }
