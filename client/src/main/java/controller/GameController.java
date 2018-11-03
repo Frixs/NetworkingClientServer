@@ -110,6 +110,7 @@ public class GameController extends AContentController {
      */
     public void updatePlayers(ArrayList<Player> list) {
         int i;
+        String score;
 
         // Set default first.
         p1NicknameT.setText("- - -");
@@ -126,6 +127,22 @@ public class GameController extends AContentController {
             pNicknameTList.get(i).setFill(list.get(i).getColor());
         }
 
+        // Set score to GUI.
+        if (list.size() > 0)
+            score =  "" + list.get(0).getScore();
+        else
+            score = "0";
+
+        score += " : ";
+
+        if (list.size() > 1)
+            score +=  "" + list.get(1).getScore();
+        else
+            score += "0";
+
+        scoreT.setText(score);
+
+        // Check limit.
         if (list.size() > pNicknameTList.size()) {
             System.out.println("ERROR occurred!");
             System.out.println("There are more players in the game than expected!");
@@ -153,7 +170,7 @@ public class GameController extends AContentController {
     }
 
     private void sendChoice(int choice) {
-        if (choice > 0)
+        if (choice <= 0)
             return;
 
         setChoicePanel(false);

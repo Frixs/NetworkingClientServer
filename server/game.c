@@ -77,7 +77,7 @@ void game_send_update_players(game_t *game) {
     char *message = NULL;
     player_t *player = NULL;
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 1024);
     memset(message, 0, strlen(message));
     sprintf(message, "1;update_players"); // Token message.
 
@@ -85,7 +85,7 @@ void game_send_update_players(game_t *game) {
         player = game->players[i];
 
         if (player)
-            sprintf(message, "%s;%s;%s;%s", message, player->id, player->nickname, player->color);
+            sprintf(message, "%s;%s;%s;%s;%d", message, player->id, player->nickname, player->color, player->score);
     }
 
     strcat(message, "\n");
@@ -323,9 +323,6 @@ void *_game_serve(void *arg) {
 
         // Wait until all players play.
         sem_wait(&game->sem_on_turn);
-
-        // Evaluate game round.
-        game_logic_evaluate(game);
     }
 
     game->in_progress = 0;

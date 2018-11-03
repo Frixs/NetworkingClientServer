@@ -7,11 +7,13 @@ public class Player {
     private String id;
     private String nickname;
     private Color color;
+    private int score;
 
-    public Player(String id, String nickname, Color color) {
+    public Player(String id, String nickname, Color color, int score) {
         this.id = id;
         this.nickname = nickname;
         this.color = color;
+        this.score = score;
     }
 
     public String getId() {
@@ -24,5 +26,9 @@ public class Player {
 
     public Color getColor() {
         return color;
+    }
+
+    public int getScore() {
+        return score;
     }
 }

@@ -329,9 +329,11 @@ public class Client implements INetwork, Runnable {
     }
 
     /**
-     * TODO;
+     * Evaluate winner of the game.
      */
     private void reqEvaluateGame() {
+        // TODO;
+        System.out.println("hey! Im waiting to game turn evaluation!");
     }
 
     /**
@@ -369,14 +371,17 @@ public class Client implements INetwork, Runnable {
 
         ArrayList<Player> list = new ArrayList<Player>();
         Color c;
+        int score;
 
-        for (int i = 2; (i + 1) < tokens.length; i+= 3) {
+        for (int i = 2; (i + 1) < tokens.length; i+= 4) {
             tokens[i] = tokens[i].trim();           // id;
             tokens[i + 1] = tokens[i + 1].trim();   // nickname;
             tokens[i + 2] = tokens[i + 2].trim();   // color;
+            tokens[i + 3] = tokens[i + 3].trim();   // score;
 
             try {
                 c = Color.valueOf(tokens[i + 2]);
+                score = Integer.parseInt(tokens[i + 3]);
             } catch (Exception e) {
                 System.out.println("ERROR occurred!");
                 System.out.println("Cannot decode player information!");
@@ -384,7 +389,7 @@ public class Client implements INetwork, Runnable {
                 return;
             }
 
-            list.add(new Player(tokens[i], tokens[i + 1], c));
+            list.add(new Player(tokens[i], tokens[i + 1], c, score));
         }
 
         ((GameController) mainWindowController.getCurrentContentController()).updatePlayers(list);
