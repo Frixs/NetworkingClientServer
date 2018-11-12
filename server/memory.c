@@ -41,6 +41,6 @@ void memory_free(void *ptr) {
 }
 
 /// Print status of the memory.
-void m_print_status() {
-    printf("==========\nMemory allocation: %li times.\n==========\n", m_current_allocation_count);
+void memory_print_status() {
+    printf("==============================\nMemory allocation: %li times.\n==============================\n", m_current_allocation_count);
 }

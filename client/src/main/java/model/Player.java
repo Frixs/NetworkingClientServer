@@ -8,12 +8,14 @@ public class Player {
     private String nickname;
     private Color color;
     private int score;
+    private int choice;
 
-    public Player(String id, String nickname, Color color, int score) {
+    public Player(String id, String nickname, Color color, int score, int choice) {
         this.id = id;
         this.nickname = nickname;
         this.color = color;
         this.score = score;
+        this.choice = choice;
     }
 
     public String getId() {
@@ -30,5 +32,9 @@ public class Player {
 
     public int getScore() {
         return score;
+    }
+
+    public int getChoice() {
+        return choice;
     }
 }

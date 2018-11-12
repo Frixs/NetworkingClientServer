@@ -54,7 +54,7 @@ int _svr_find_id(char *id) {
                 return 1;
             }
 
-            player_ptr = player_ptr->next_player;
+            player_ptr = player_ptr->next;
         } while (player_ptr != NULL);
 
     }
@@ -73,7 +73,7 @@ int _svr_find_id(char *id) {
                 return 1;
             }
 
-            game_ptr = game_ptr->next_game;
+            game_ptr = game_ptr->next;
         } while (game_ptr != NULL);
     }
 
@@ -111,7 +111,7 @@ void svr_broadcast(char *message) {
             if (player_ptr->is_disconnected != 1)
                 svr_send(player_ptr->socket, message);
 
-            player_ptr = player_ptr->next_player;
+            player_ptr = player_ptr->next;
         } while (player_ptr != NULL);
 
     }
@@ -533,21 +533,17 @@ int main(int argv, char *args[]) {
             break;
         if (strcmp(input, "info") == 0)
             print_info(stdout);
-//        if (strcmp(input, "games") == 0)
-//            print_games();
-//        if (strcmp(input, "players") == 0)
-//            print_players();
+        if (strcmp(input, "games") == 0)
+            game_print();
+        if (strcmp(input, "players") == 0)
+            player_print();
     }
 
     pthread_cancel(thread_id);
 
-    log_message = memory_malloc(sizeof(char) * 256);
-    sprintf(log_message, "1;stop_server\n"); // Token message.
-//    svr_broadcast(log_message);
-
     colors_free();
-//    free_players();
-//    free_games();
+    player_free();
+    game_free();
 
     log_message = memory_malloc(sizeof(char) * 256);
     sprintf(log_message, "\t> Server is shutting down.\n");
@@ -555,6 +551,7 @@ int main(int argv, char *args[]) {
     memory_free(log_message);
 
     write_stats();
+    memory_print_status();
 
     print_info(stdout);
 

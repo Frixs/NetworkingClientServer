@@ -2,6 +2,7 @@ package main.java.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -125,6 +126,11 @@ public class GameController extends AContentController {
 
             pNicknameTList.get(i).setText(list.get(i).getNickname());
             pNicknameTList.get(i).setFill(list.get(i).getColor());
+
+            if (list.get(i).getChoice() > 0)
+                pChoiceIVList.get(i).setImage(new Image("/main/resource/image/icon_" + list.get(i).getChoice() + ".png"));
+            else
+                pChoiceIVList.get(i).setImage(null);
         }
 
         // Set score to GUI.
@@ -175,6 +181,12 @@ public class GameController extends AContentController {
 
         setChoicePanel(false);
 
+        if (pNicknameTList.get(0).getText().equals(Client.SELF.nickname))
+            pChoiceIVList.get(0).setImage(new Image("/main/resource/image/icon_" + choice + ".png"));
+        else
+            pChoiceIVList.get(1).setImage(new Image("/main/resource/image/icon_" + choice + ".png"));
+
+        // Send.
         Client.SELF.sendMessage(new Message("game_choice_selected;" + choice)); // Token message.
     }
 }

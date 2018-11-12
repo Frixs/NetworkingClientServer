@@ -15,6 +15,6 @@ void *memory_malloc(size_t size);
 void memory_free(void *ptr);
 
 /// Print status of the memory.
-void m_print_status();
+void memory_print_status();
 
 #endif //SERVER_MEMORY_H

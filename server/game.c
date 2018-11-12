@@ -32,7 +32,7 @@ game_t *game_find(char *id) {
                 return game_ptr;
             }
 
-            game_ptr = game_ptr->next_game;
+            game_ptr = game_ptr->next;
 
         } while (game_ptr != NULL);
     }
@@ -56,7 +56,7 @@ void game_broadcast_update_games() {
             if (game_list_ptr->player_count < PLAYER_COUNT)
                 sprintf(message, "%s;%s;%s;%d", message, game_list_ptr->name, game_list_ptr->id, game_list_ptr->goal);
 
-            game_list_ptr = game_list_ptr->next_game;
+            game_list_ptr = game_list_ptr->next;
 
         } while (game_list_ptr != NULL);
     }
@@ -85,7 +85,7 @@ void game_send_update_players(game_t *game) {
         player = game->players[i];
 
         if (player)
-            sprintf(message, "%s;%s;%s;%s;%d", message, player->id, player->nickname, player->color, player->score);
+            sprintf(message, "%s;%s;%s;%s;%d;%d", message, player->id, player->nickname, player->color, player->score, player->choice);
     }
 
     strcat(message, "\n");
@@ -124,6 +124,9 @@ void game_send_current_state_info(game_t *game) {
 
             // Turn off the game.
             game->in_progress = 0;
+
+            // Release game semaphore.
+            sem_post(&game->sem_on_turn);
         }
     } else if (game->player_count < PLAYER_COUNT) {
         state = 1;
@@ -153,7 +156,7 @@ void game_create(player_t *player, int goal) {
     strcpy(game->name, "game-");
     strcat(game->name, game->id);
 
-    game->next_game = NULL;
+    game->next = NULL;
     game->player_count = 0;
 
     if (goal > 0)
@@ -191,11 +194,11 @@ void game_add(game_t *game) {
     } else {
         game_t *game_list_ptr = g_game_list;
 
-        while (game_list_ptr->next_game != NULL) {
-            game_list_ptr = game_list_ptr->next_game;
+        while (game_list_ptr->next != NULL) {
+            game_list_ptr = game_list_ptr->next;
         }
 
-        game_list_ptr->next_game = game;
+        game_list_ptr->next = game;
     }
 
     pthread_mutex_unlock(&g_game_list_mutex);
@@ -208,11 +211,11 @@ void game_remove(game_t *game) {
         return;
 
     char *id = game->id;
-    game_t *game_list_ptr = NULL;
+    game_t *ptr = NULL;
     game_t *previous = NULL;
     char *log_message = NULL;
 
-    game_list_ptr = g_game_list;
+    ptr = g_game_list;
 
     log_message = memory_malloc(sizeof(char) * 256);
     sprintf(log_message, "\t> Game removed (ID: %s)!\n", game->id);
@@ -220,26 +223,29 @@ void game_remove(game_t *game) {
     pthread_mutex_lock(&g_game_list_mutex);
 
     do {
-        if (strcmp(game_list_ptr->id, id) == 0) {
+        if (strcmp(ptr->id, id) == 0) {
             if (!previous) {
-                if (game_list_ptr->next_game == NULL) {
-                    _game_destroy(game_list_ptr);
+                if (ptr->next == NULL) {
+                    _game_destroy(ptr);
                     g_game_list = NULL;
                 } else {
-                    g_game_list = game_list_ptr->next_game;
-                    _game_destroy(game_list_ptr);
+                    g_game_list = ptr->next;
+                    _game_destroy(ptr);
+                    ptr = NULL;
                 }
             } else {
-                previous->next_game = game_list_ptr->next_game;
-                _game_destroy(game_list_ptr);
-                game_list_ptr = NULL;
+                previous->next = ptr->next;
+                _game_destroy(ptr);
+                ptr = NULL;
             }
         }
 
-        previous = game_list_ptr;
-        game_list_ptr = game_list_ptr->next_game;
+        if (ptr) {
+            previous = ptr;
+            ptr = ptr->next;
+        }
 
-    } while (game_list_ptr != NULL);
+    } while (ptr);
 
     pthread_mutex_unlock(&g_game_list_mutex);
 
@@ -317,6 +323,9 @@ void *_game_serve(void *arg) {
     while (game->in_progress && game->player_count == PLAYER_COUNT) {
         for (int i = 0; i < game->player_count; ++i) {
             game_logic_prepare_player_turn(game->players[i]);
+            // Update player data.
+            game_send_update_players(game);
+
             message = memory_malloc(sizeof(char) * 256);
             memset(message, 0, strlen(message));
             sprintf(message, "%s;on_turn\n", game->players[i]->id);
@@ -354,13 +363,13 @@ void game_print() {
 
     printf("========== GAME LIST ==========\n");
 
-    if (g_player_list) {
+    if (g_game_list) {
         do {
             printf("Name: %s (ID: %s)\n", ptr->name, ptr->id);
-            ptr = ptr->next_game;
+            ptr = ptr->next;
 
         } while (ptr);
     }
 
-    printf("==============================\n");
+    printf("===============================\n");
 }

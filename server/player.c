@@ -30,7 +30,7 @@ player_t *player_create(int socket, char *nickname) {
     p->socket = socket;
     p->is_disconnected = 0;
     p->id = svr_generate_id();
-    p->next_player = NULL;
+    p->next = NULL;
     p->game = NULL;
 
     return p;
@@ -48,37 +48,40 @@ void player_remove(player_t *player) {
     int is_disconnected = player->is_disconnected;
     char *log_message = NULL;
     char *message = NULL;
+    player_t *previous = NULL;
+    player_t *ptr = NULL;
+
+    ptr = g_player_list;
 
     log_message = memory_malloc(sizeof(char) * 256);
     sprintf(log_message, "\t> Player %s (ID: %s) has disconnected!\n", player->nickname, player->id);
 
     pthread_mutex_lock(&g_player_list_mutex);
 
-    player_t *player_list_ptr = g_player_list;
-    player_t *previous_player = NULL;
-
     do {
-        if (strcmp(player_list_ptr->id, id) == 0) {
-            if (!previous_player) {
-                if (player_list_ptr->next_player == NULL) {
-                    _player_destroy(player_list_ptr);
+        if (strcmp(ptr->id, id) == 0) {
+            if (!previous) {
+                if (ptr->next == NULL) {
+                    _player_destroy(ptr);
                     g_player_list = NULL;
                 } else {
-                    g_player_list = player_list_ptr->next_player;
-                    _player_destroy(player_list_ptr);
-                    player_list_ptr = NULL;
+                    g_player_list = ptr->next;
+                    _player_destroy(ptr);
+                    ptr = NULL;
                 }
             } else {
-                previous_player->next_player = player_list_ptr->next_player;
-                _player_destroy(player_list_ptr);
-                g_player_list = NULL;
+                previous->next = ptr->next;
+                _player_destroy(ptr);
+                ptr = NULL;
             }
         }
 
-        previous_player = player_list_ptr;
-        player_list_ptr = player_list_ptr->next_player;
+        if (ptr) {
+            previous = ptr;
+            ptr = ptr->next;
+        }
 
-    } while (player_list_ptr != NULL);
+    } while (ptr);
 
     pthread_mutex_unlock(&g_player_list_mutex);
 
@@ -98,6 +101,9 @@ void player_remove(player_t *player) {
 /// Free all the needed memory space to be able to delete a pointer to the player without filled memory with its data. (Delete the player).
 /// \param player
 void _player_destroy(player_t *player) {
+    if (!player)
+        return;
+
     memory_free(player->id);
     memory_free(player->nickname);
     memory_free(player);
@@ -123,7 +129,7 @@ player_t *player_find(char *id) {
                 return player_ptr;
             }
 
-            player_ptr = player_ptr->next_player;
+            player_ptr = player_ptr->next;
 
         } while (player_ptr != NULL);
     }
@@ -148,11 +154,11 @@ void player_add(player_t *player) {
         // There are already some players created, let's add a new one at the end of the player list.
         player_t *ptr = g_player_list;
 
-        while (ptr->next_player != NULL) {
-            ptr = ptr->next_player;
+        while (ptr->next != NULL) {
+            ptr = ptr->next;
         }
 
-        ptr->next_player = player;
+        ptr->next = player;
     }
 
     pthread_mutex_unlock(&g_player_list_mutex);
@@ -254,8 +260,8 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
         }
     }
 
-    if (game->in_progress)
-        sem_post(&game->sem_on_turn);
+//    if (game->in_progress)
+//        sem_post(&game->sem_on_turn);
 
     game_broadcast_update_games();
 
@@ -301,10 +307,10 @@ void player_print() {
     if (g_player_list) {
         do {
             printf("Nickname: %s (ID: %s)\n", ptr->nickname, ptr->id);
-            ptr = ptr->next_player;
+            ptr = ptr->next;
 
         } while (ptr);
     }
 
-    printf("==============================\n");
+    printf("===============================\n");
 }

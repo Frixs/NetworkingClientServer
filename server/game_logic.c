@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "structs.h"
 #include "game_logic.h"
 #include "memory.h"
@@ -43,6 +44,9 @@ void _game_logic_evaluate(game_t *g) {
 
     // Update player data.
     game_send_update_players(g);
+
+    // Sleep due to client-friendly interaction.
+    sleep(1);
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));

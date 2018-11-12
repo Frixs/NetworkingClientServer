@@ -21,7 +21,7 @@ typedef struct theplayer {
     char *color;
     int score;
     int choice;
-    struct theplayer *next_player;
+    struct theplayer *next;
     struct thegame *game;
 
 } player_t;
@@ -35,7 +35,7 @@ typedef struct thegame {
     int in_progress;
     pthread_t thread;
     sem_t sem_on_turn;
-    struct thegame *next_game;
+    struct thegame *next;
 } game_t;
 
 #endif //SERVER_STRUCTS_H

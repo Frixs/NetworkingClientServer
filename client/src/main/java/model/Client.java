@@ -16,6 +16,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by Frixs on 17.10.2018.
  */
@@ -217,9 +219,12 @@ public class Client implements INetwork, Runnable {
                             return;
                     }
                     timeout++;
+                    sleep(5000);
 
                 } catch (SocketTimeoutException e) {
                     sendMessage(new Message("get_games")); // Token message.
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             } while (timeout < 2);
 
@@ -232,6 +237,7 @@ public class Client implements INetwork, Runnable {
             });
 
         } catch (IOException e) {
+            e.printStackTrace();
             Platform.runLater(() -> {
                 mainWindowController.loadContent(WindowContent.CONNECTION_FORM);
                 Alert alert = new Alert(Alert.AlertType.ERROR, "An unexpected ERROR occurred on the server!", ButtonType.OK);
@@ -394,16 +400,19 @@ public class Client implements INetwork, Runnable {
         ArrayList<Player> list = new ArrayList<Player>();
         Color c;
         int score;
+        int choice;
 
-        for (int i = 2; (i + 1) < tokens.length; i+= 4) {
+        for (int i = 2; (i + 1) < tokens.length; i+= 5) {
             tokens[i] = tokens[i].trim();           // id;
             tokens[i + 1] = tokens[i + 1].trim();   // nickname;
             tokens[i + 2] = tokens[i + 2].trim();   // color;
             tokens[i + 3] = tokens[i + 3].trim();   // score;
+            tokens[i + 4] = tokens[i + 4].trim();   // choice;
 
             try {
                 c = Color.valueOf(tokens[i + 2]);
                 score = Integer.parseInt(tokens[i + 3]);
+                choice = Integer.parseInt(tokens[i + 4]);
             } catch (Exception e) {
                 System.out.println("ERROR occurred!");
                 System.out.println("Cannot decode player information!");
@@ -411,7 +420,7 @@ public class Client implements INetwork, Runnable {
                 return;
             }
 
-            list.add(new Player(tokens[i], tokens[i + 1], c, score));
+            list.add(new Player(tokens[i], tokens[i + 1], c, score, choice));
         }
 
         ((GameController) mainWindowController.getCurrentContentController()).updatePlayers(list);
