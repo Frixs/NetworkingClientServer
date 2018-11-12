@@ -284,3 +284,27 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
 
     memory_free(message);
 }
+
+/// Free al players.
+void player_free() {
+    while (g_player_list) {
+        player_remove(g_player_list);
+    }
+}
+
+/// Print the player.
+void player_print() {
+    player_t *ptr = g_player_list;
+
+    printf("========= PLAYER LIST =========\n");
+
+    if (g_player_list) {
+        do {
+            printf("Nickname: %s (ID: %s)\n", ptr->nickname, ptr->id);
+            ptr = ptr->next_player;
+
+        } while (ptr);
+    }
+
+    printf("==============================\n");
+}

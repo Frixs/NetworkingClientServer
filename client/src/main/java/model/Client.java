@@ -263,11 +263,14 @@ public class Client implements INetwork, Runnable {
                     break;
 
                 case "kick_player":
-                    // TODO;
+                    Platform.runLater(() -> reqKickPlayer());
+                    break;
+
+                case "game_state":
                     break;
 
                 case "set_player_win":
-                    // TODO;
+                    Platform.runLater(() -> reqSetPlayerWin(tokens));
                     break;
 
                 case "update_players":
@@ -293,8 +296,8 @@ public class Client implements INetwork, Runnable {
                     Platform.runLater(() -> reqOnTurn());
                     break;
 
-                case "evaluate_game":
-                    Platform.runLater(() -> reqEvaluateGame());
+                case "do_after_turn":
+                    Platform.runLater(() -> reqDoAfterTurn());
                     break;
 
                 case "leave_game":
@@ -319,6 +322,33 @@ public class Client implements INetwork, Runnable {
     }
 
     /**
+     * Kick player from the game.
+     */
+    private void reqKickPlayer() {
+        mainWindowController.loadContent(WindowContent.LOBBY);
+    }
+
+    /**
+     * Evaluate winner of the game.
+     * @param tokens    The tokens.
+     */
+    private void reqSetPlayerWin(String[] tokens) {
+        Alert alert = null;
+        if (tokens[0].equals(this.id)) {
+            alert = new Alert(Alert.AlertType.INFORMATION, "Congratulation! You won the game!", ButtonType.OK);
+        } else {
+            alert = new Alert(Alert.AlertType.INFORMATION, "Player " + tokens[2] + " won the game!", ButtonType.OK);
+        }
+        alert.showAndWait();
+    }
+
+    /**
+     * Do after turn.
+     */
+    private void reqDoAfterTurn() {
+    }
+
+    /**
      * Cannot join the game. Solve it.
      */
     private void reqCannotJoinGame() {
@@ -326,14 +356,6 @@ public class Client implements INetwork, Runnable {
             return;
 
         mainWindowController.loadContent(WindowContent.LOBBY);
-    }
-
-    /**
-     * Evaluate winner of the game.
-     */
-    private void reqEvaluateGame() {
-        // TODO;
-        System.out.println("hey! Im waiting to game turn evaluation!");
     }
 
     /**

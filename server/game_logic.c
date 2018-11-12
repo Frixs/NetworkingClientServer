@@ -20,6 +20,7 @@ void _game_logic_evaluate(game_t *g) {
         return;
 
     char *message = NULL;
+    player_t *p = NULL;
 
     // Check if all players already have selected their choice.
     for (int i = 0; i < g->player_count; ++i)
@@ -30,13 +31,22 @@ void _game_logic_evaluate(game_t *g) {
     // Count score.
     _game_logic_count_score(g);
 
-    // TODO: Check winner.
+    // Check winner.
+    if ((p =_game_logic_check_winner(g))) {
+        message = memory_malloc(sizeof(char) * 256);
+        sprintf(message, "%s;set_player_win;%s\n", p->id, p->nickname); // Token message.
+        game_multicast(g, message);
 
+        // Turn off the game.
+        g->in_progress = 0;
+    }
+
+    // Update player data.
     game_send_update_players(g);
 
     message = memory_malloc(sizeof(char) * 256);
     memset(message, 0, strlen(message));
-    sprintf(message, "1;evaluate_game\n"); // Token message.
+    sprintf(message, "1;do_after_turn\n"); // Token message.
     game_multicast(g, message);
 
     // Release game semaphore.
@@ -189,4 +199,27 @@ void _game_logic_set_score_to_all_by_choice(game_t *g, choice_t c) {
         if (g->players[i]->choice == c)
             g->players[i]->score++;
     }
+}
+
+/// Check winner.
+/// \param g    The game.
+/// \return     NULL on failure or player who is the winner of the game.
+player_t *_game_logic_check_winner(game_t *g) {
+    if (!g)
+        return NULL;
+
+    player_t *p = NULL;
+
+    for (int i = 0; i < g->player_count; ++i) {
+        if (g->players[i]->score >= g->goal) {
+            if (p) {
+                g->goal++;
+                return NULL;
+            }
+
+            p = g->players[i];
+        }
+    }
+
+    return p;
 }

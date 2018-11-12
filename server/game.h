@@ -16,7 +16,7 @@ void _game_destroy(game_t *game);
 int game_start(game_t *game);
 void game_multicast(game_t *game, char *message);
 void *_game_serve(void *arg);
-//void game_free();
-//void game_print();
+void game_free();
+void game_print();
 
 #endif //SERVER_GAME_H

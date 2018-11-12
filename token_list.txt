@@ -23,4 +23,3 @@ update_games
 update_players
 set_player_win
 game_state
-evaluate_game

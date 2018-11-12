@@ -12,6 +12,7 @@ player_t *player_find(char *id);
 void player_add(player_t *player);
 int player_connect_to_game(player_t *player, game_t *game);
 void player_disconnect_from_game(player_t *player, game_t *game);
-//void player_print();
+void player_free();
+void player_print();
 
 #endif //SERVER_PLAYER_H

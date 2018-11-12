@@ -121,6 +121,9 @@ void game_send_current_state_info(game_t *game) {
 
             sprintf(message, "%s;set_player_win;%s\n", player->id, player->nickname); // Token message.
             game_multicast(game, message);
+
+            // Turn off the game.
+            game->in_progress = 0;
         }
     } else if (game->player_count < PLAYER_COUNT) {
         state = 1;
@@ -325,7 +328,39 @@ void *_game_serve(void *arg) {
         sem_wait(&game->sem_on_turn);
     }
 
+    // Disconnect all players.
+    for (int j = 0; j < PLAYER_COUNT; ++j) {
+        if (!game->player_count)
+            break;
+
+        player_disconnect_from_game(game->players[j], game);
+    }
+
     game->in_progress = 0;
 
     return NULL;
+}
+
+/// Free all games.
+void game_free() {
+    while (g_game_list) {
+        game_remove(g_game_list);
+    }
+}
+
+/// Print the game.
+void game_print() {
+    game_t *ptr = g_game_list;
+
+    printf("========== GAME LIST ==========\n");
+
+    if (g_player_list) {
+        do {
+            printf("Name: %s (ID: %s)\n", ptr->name, ptr->id);
+            ptr = ptr->next_game;
+
+        } while (ptr);
+    }
+
+    printf("==============================\n");
 }

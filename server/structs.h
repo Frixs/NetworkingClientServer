@@ -20,7 +20,6 @@ typedef struct theplayer {
     char *nickname;
     char *color;
     int score;
-    int has_selected;
     int choice;
     struct theplayer *next_player;
     struct thegame *game;
