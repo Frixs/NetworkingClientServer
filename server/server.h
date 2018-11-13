@@ -10,7 +10,7 @@ extern pthread_mutex_t g_player_list_mutex;
 extern game_t *g_game_list;
 extern pthread_mutex_t g_game_list_mutex;
 
-void svr_send(int socket, char *message);
+void svr_send(int socket, char *message, int is_broadcast_message);
 int _svr_find_id(char *id);
 char *svr_generate_id();
 void svr_broadcast(char *message);

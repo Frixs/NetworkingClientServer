@@ -299,11 +299,11 @@ void game_multicast(game_t *game, char *message) {
 
     int i;
 
-//    printf("--->>> %s", message);
+    printf(ANSI_COLOR_BLUE "--->>> (BC/g)\t %s" ANSI_COLOR_RESET, message);
 
     for (i = 0; i < PLAYER_COUNT; ++i)
         if (game->players[i] && game->players[i]->is_disconnected != 1)
-            svr_send(game->players[i]->socket, message);
+            svr_send(game->players[i]->socket, message, 1);
 
     memory_free(message);
 }
@@ -329,7 +329,7 @@ void *_game_serve(void *arg) {
             message = memory_malloc(sizeof(char) * 256);
             memset(message, 0, strlen(message));
             sprintf(message, "%s;on_turn\n", game->players[i]->id);
-            svr_send(game->players[i]->socket, message);
+            svr_send(game->players[i]->socket, message, 0);
             memory_free(message);
         }
 

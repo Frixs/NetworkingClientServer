@@ -26,7 +26,7 @@ void colors_init() {
 /// Free memory.
 void colors_free() {
     int i;
-    for (i = 0; i < PLAYER_COUNT; i++) {
+    for (i = 0; i < (PLAYER_COUNT + COLORS_STATUS_COUNT); i++) {
         memory_free(g_color_list[i]);
         g_color_list[i] = NULL;
     }

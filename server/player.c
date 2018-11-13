@@ -89,7 +89,7 @@ void player_remove(player_t *player) {
     sprintf(message, "%s;disconnect_player\n", id); // Token message.
 
     if (is_disconnected != 1)
-        svr_send(socket, message);
+        svr_send(socket, message, 0);
 
     write_log(log_message);
 
@@ -207,7 +207,7 @@ int player_connect_to_game(player_t *player, game_t *game) {
     memset(message, 0, strlen(message));
     sprintf(message, "%s;prepare_window_for_game;%s;%s;%d\n", player->id, game->id, game->name,
             game->goal); // Token message.
-    svr_send(player->socket, message);
+    svr_send(player->socket, message, 0);
 
     log_message = memory_malloc(sizeof(char) * 256);
     if (is_reconnecting)
@@ -278,7 +278,7 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
 
     // Do not disconnect the player who lost a connection.
     if (player->is_disconnected != 1)
-        svr_send(player->socket, message);
+        svr_send(player->socket, message, 0);
 
     // If there is no player, remove the game. Or update information.
     if (game->player_count == 0) {

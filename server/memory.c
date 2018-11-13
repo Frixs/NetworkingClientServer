@@ -19,13 +19,13 @@ void *memory_malloc(size_t size) {
 
     void *m = NULL;
 
-    m_current_allocation_count++;
-
     m = malloc(size);
     while (m == NULL) {
         sleep(1);
         m = malloc(size);
     }
+
+    m_current_allocation_count++;
 
     return m;
 }

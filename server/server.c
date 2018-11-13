@@ -16,7 +16,6 @@
 #include "game.h"
 #include "game_logic.h"
 
-time_t time_initial, time_current;
 player_t *g_player_list;
 pthread_mutex_t g_player_list_mutex;
 game_t *g_game_list;
@@ -27,10 +26,13 @@ pthread_t thread_id;
 struct timeval timeout;
 
 /// Send the message to entered socket and write the message to statistics.
-/// \param socket       Socket where the message is sent.
-/// \param message      Message.
-void svr_send(int socket, char *message) {
-    printf("--->>> %s", message);
+/// \param socket                   Socket where the message is sent.
+/// \param message                  The Message.
+/// \param is_broadcast_message     Tells, if it is single message or broadcast the same messages to multiple clients.
+void svr_send(int socket, char *message, int is_broadcast_message) {
+    if (!is_broadcast_message)
+        printf(ANSI_COLOR_BLUE "--->>>\t\t\t %s" ANSI_COLOR_RESET, message);
+
     bytes_sent += send(socket, message, strlen(message) * sizeof(char), 0);
     messages_sent++;
 }
@@ -101,7 +103,7 @@ void svr_broadcast(char *message) {
     if (!message)
         return;
 
-//    printf("--->>> %s", message);
+    printf(ANSI_COLOR_BLUE "--->>> (BC)\t\t %s" ANSI_COLOR_RESET, message);
 
     pthread_mutex_lock(&g_player_list_mutex);
     if (g_player_list != NULL) {
@@ -109,7 +111,7 @@ void svr_broadcast(char *message) {
 
         do {
             if (player_ptr->is_disconnected != 1)
-                svr_send(player_ptr->socket, message);
+                svr_send(player_ptr->socket, message, 1);
 
             player_ptr = player_ptr->next;
         } while (player_ptr != NULL);
@@ -139,7 +141,7 @@ void *_svr_serve_receiving(void *arg) {
                     // Send a message back to client.
                     message = memory_malloc(sizeof(char) * 256);
                     sprintf(message, "%s;kick_player\n", player_ptr->id); // Token message.
-                    svr_send(player_ptr->socket, message);
+                    svr_send(player_ptr->socket, message, 0);
                     memory_free(message);
 
                     player_disconnect_from_game(player_ptr, player_ptr->game);
@@ -154,7 +156,7 @@ void *_svr_serve_receiving(void *arg) {
             bytes_received += read_size;
             messages_received++;
 
-            printf("<<<--- %s", cbuf);
+            printf(ANSI_COLOR_CYAN "<<<---\t\t\t %s" ANSI_COLOR_RESET, cbuf);
             _svr_process_request(cbuf);
             memset(cbuf, 0, 1024 * sizeof(char));
 
@@ -220,7 +222,7 @@ void *_svr_connection_handler(void *arg) {
         // Send a message back to client.
         message = memory_malloc(sizeof(char) * 256);
         sprintf(message, "%s;_player_id_reconnected\n", player->id); // Token message.
-        svr_send(player->socket, message);
+        svr_send(player->socket, message, 0);
         memory_free(message);
 
     } else if ((tokens != NULL && is_reconnecting) || (tokens != NULL && strcmp(tokens, "_player_nickname") == 0)) { // Client is firstly connecting to the server.
@@ -229,7 +231,6 @@ void *_svr_connection_handler(void *arg) {
         nickname = strtok(NULL, ";");
 
         if (!nickname) {
-            nickname = memory_malloc(sizeof(char) * 10);
             sprintf(nickname, "Player"); // Default player name.
         }
 
@@ -239,7 +240,7 @@ void *_svr_connection_handler(void *arg) {
         // Send a message back to client.
         message = memory_malloc(sizeof(char) * 256);
         sprintf(message, "%s;_player_id\n", player->id); // Token message.
-        svr_send(player->socket, message);
+        svr_send(player->socket, message, 0);
         memory_free(message);
 
         // Add player to the list.
@@ -273,7 +274,7 @@ void *_svr_connection_handler(void *arg) {
         // Send a message back to client.
         message = memory_malloc(sizeof(char) * 256);
         sprintf(message, "%s;player_crash\n", player->id); // Token message.
-        svr_send(player->socket, message);
+        svr_send(player->socket, message, 0);
         memory_free(message);
 
         // Remove player because of unsuccessful thread start.
@@ -417,7 +418,7 @@ void _svr_process_request(char *message) {
                 char *msg = NULL;
                 msg = memory_malloc(sizeof(char) * 256);
                 sprintf(msg, "%s;cannot_join_game\n", player->id); // Token message.
-                svr_send(player->socket, msg);
+                svr_send(player->socket, msg, 0);
                 memory_free(msg);
             }
 
@@ -518,6 +519,7 @@ int main(int argv, char *args[]) {
     log_message = memory_malloc(sizeof(char) * 256);
     sprintf(log_message, "\t> Server is running on the port: %d.\n", port);
     write_log(log_message);
+    memory_free(log_message);
 
     thread_id = 0;
     if (pthread_create(&thread_id, NULL, _svr_serve_connection, (void *) &port) != 0) {
@@ -533,6 +535,8 @@ int main(int argv, char *args[]) {
             break;
         if (strcmp(input, "info") == 0)
             print_info(stdout);
+        if (strcmp(input, "memory") == 0)
+            memory_print_status();
         if (strcmp(input, "games") == 0)
             game_print();
         if (strcmp(input, "players") == 0)

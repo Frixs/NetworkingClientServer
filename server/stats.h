@@ -5,6 +5,7 @@
 #ifndef SERVER_STATS_H
 #define SERVER_STATS_H
 
+extern time_t time_initial, time_current;
 extern long bytes_received;
 extern long bytes_sent;
 extern long messages_received;

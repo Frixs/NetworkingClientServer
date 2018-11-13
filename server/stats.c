@@ -17,15 +17,15 @@ long messages_bad = 0;
 /// Prints the info about the connection.
 /// \param stream
 void print_info(FILE *stream) {
-    time(&time_initial);
+    time(&time_current);
 
     long seconds    = (long) difftime(time_current, time_initial);
-    int minutes     = seconds / 60;
-    int hours       = minutes / 60;
+    long minutes     = seconds / 60;
+    long hours       = minutes / 60;
 
     fprintf(stream, "==================== SERVER STATISTICS ====================\n");
     fprintf(stream, "Server started at: %s\n", asctime(localtime(&time_initial)));
-    fprintf(stream, "Already running: %d hours(y) %d minutes(y) %ld seconds(y)\n", hours, minutes, seconds%60);
+    fprintf(stream, "Already running: %ld hours %ld minutes %ld seconds\n", hours, minutes, seconds%60);
     fprintf(stream, "Number of recieved messages: %ld\n", messages_received);
     fprintf(stream, "Number of recieved bytes: %ld\n", bytes_received);
     fprintf(stream, "Number of sent messages: %ld\n", messages_sent);
