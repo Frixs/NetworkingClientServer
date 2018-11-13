@@ -106,8 +106,7 @@ public class Client implements INetwork, Runnable {
 
         // Create a new socket.
         try {
-            if (this.socket == null)
-                this.socket = new Socket(this.hostAddress, this.port);
+            this.socket = new Socket(this.hostAddress, this.port);
             this.socket.setSoTimeout(15000); // 15 sec.
 
             System.out.println("Connecting to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + " ...");
