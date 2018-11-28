@@ -256,8 +256,11 @@ public class Client implements INetwork, Runnable {
      */
     private void processMessage(String message) {
         String[] tokens = message.split(";");
+        boolean doDefault;
 
-        if (tokens.length > 0) {
+        if (tokens.length > 1) {
+            doDefault = false;
+
             // Token list which is acceptable from server side.
             // List of events which client accepts from server side.
             switch (tokens[1]) {
@@ -287,6 +290,10 @@ public class Client implements INetwork, Runnable {
                     break;
 
                 case "prepare_window_for_game":
+                    if (tokens.length <= 4) {
+                        doDefault = true;
+                        break;
+                    }
                     Platform.runLater(() -> reqPrepareWindowForGame(tokens[2], tokens[3], tokens[4]));
                     break;
 
@@ -316,10 +323,15 @@ public class Client implements INetwork, Runnable {
                     break;
 
                 default:
-                    System.out.println("ERROR occurred!");
-                    System.out.println("\t- Received message does not fit the format!");
-                    System.out.println("\t- Message: " + message);
+                    doDefault = true;
             }
+
+            if (doDefault) {
+                System.out.println("ERROR occurred!");
+                System.out.println("\t- Received message does not fit the format!");
+                System.out.println("\t- Message: " + message);
+            }
+
         } else {
             System.out.println("ERROR occurred!");
             System.out.println("Received message does not fit the format!");
@@ -342,7 +354,7 @@ public class Client implements INetwork, Runnable {
         if (tokens[0].equals(this.id)) {
             alert = new Alert(Alert.AlertType.INFORMATION, "Congratulation! You won the game!", ButtonType.OK);
         } else {
-            alert = new Alert(Alert.AlertType.INFORMATION, "Player " + tokens[2] + " won the game!", ButtonType.OK);
+            alert = new Alert(Alert.AlertType.INFORMATION, "Player " + (tokens.length > 2 ? tokens[2] : "UNKNOWN") + " won the game!", ButtonType.OK);
         }
         alert.showAndWait();
     }
@@ -401,7 +413,7 @@ public class Client implements INetwork, Runnable {
         int score;
         int choice;
 
-        for (int i = 2; (i + 1) < tokens.length; i+= 5) {
+        for (int i = 2; (i + 4) < tokens.length; i+= 5) {
             tokens[i] = tokens[i].trim();           // id;
             tokens[i + 1] = tokens[i + 1].trim();   // nickname;
             tokens[i + 2] = tokens[i + 2].trim();   // color;
@@ -475,7 +487,7 @@ public class Client implements INetwork, Runnable {
 
         ((LobbyController) mainWindowController.getCurrentContentController()).getGameListLV().getItems().clear();
 
-        for (int i = 2; (i + 1) < tokens.length; i+= 3) {
+        for (int i = 2; (i + 2) < tokens.length; i+= 3) {
             tokens[i] = tokens[i].trim();
             tokens[i + 1] = tokens[i + 1].trim();
             tokens[i + 2] = tokens[i + 2].trim();

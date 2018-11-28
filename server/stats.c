@@ -23,22 +23,22 @@ void print_info(FILE *stream) {
     long minutes     = seconds / 60;
     long hours       = minutes / 60;
 
-    fprintf(stream, "==================== SERVER STATISTICS ====================\n");
-    fprintf(stream, "Server started at: %s\n", asctime(localtime(&time_initial)));
-    fprintf(stream, "Already running: %ld hours %ld minutes %ld seconds\n", hours, minutes, seconds%60);
-    fprintf(stream, "Number of recieved messages: %ld\n", messages_received);
-    fprintf(stream, "Number of recieved bytes: %ld\n", bytes_received);
-    fprintf(stream, "Number of sent messages: %ld\n", messages_sent);
-    fprintf(stream, "Number of sent bytes: %ld\n", bytes_sent);
-    fprintf(stream, "Number of recieved messages with bad form: %ld\n", messages_bad);
-    fprintf(stream, "===========================================================\n");
+    fprintf(stream, "==================== SERVER STATISTICS ====================\r\n");
+    fprintf(stream, "Server started at: %s\r\n", asctime(localtime(&time_initial)));
+    fprintf(stream, "Already running: %ld hours %ld minutes %ld seconds\r\n", hours, minutes, seconds%60);
+    fprintf(stream, "Number of recieved messages: %ld\r\n", messages_received);
+    fprintf(stream, "Number of recieved bytes: %ld\r\n", bytes_received);
+    fprintf(stream, "Number of sent messages: %ld\r\n", messages_sent);
+    fprintf(stream, "Number of sent bytes: %ld\r\n", bytes_sent);
+    fprintf(stream, "Number of recieved messages with bad form: %ld\r\n", messages_bad);
+    fprintf(stream, "===========================================================\r\n");
 }
 
 /// Write down message into log file and console.
 /// \param log
 void write_log(char *log) {
     FILE *logs = fopen("server.log", "a");
-    fprintf(logs, "%s\t%s", asctime(localtime(&time_initial)), log);
+    fprintf(logs, "%s\t%s\r\n", asctime(localtime(&time_initial)), log);
     fprintf(stdout, "%s", log);
     fclose(logs);
 }
