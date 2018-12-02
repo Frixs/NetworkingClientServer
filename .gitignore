@@ -1,3 +1,9 @@
 /*/.idea/*
 /server/cmake-build-debug/*
 /client/out/*
+/final/c_src/*
+/final/c_bin/*
+/final/java_src/*
+/final/java_bin/*
+/final/dokumentace.pdf
+/final/server
