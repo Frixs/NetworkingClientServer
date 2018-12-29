@@ -6,6 +6,7 @@
 #define SERVER_STRUCTS_H
 
 #include <semaphore.h>
+#include <netinet/in.h>
 
 typedef enum thechoice {
     ROCK        = 1,
@@ -18,6 +19,7 @@ typedef struct theplayer {
     char *id;
     int is_disconnected;
     char *nickname;
+    char *client_addr;
     char *color;
     int score;
     int choice;
@@ -37,5 +39,11 @@ typedef struct thegame {
     sem_t sem_on_turn;
     struct thegame *next;
 } game_t;
+
+typedef struct theremoteconnection {
+    char *client_address;
+    int client_address_len;
+    int client_socket;
+} remote_connection_t;
 
 #endif //SERVER_STRUCTS_H

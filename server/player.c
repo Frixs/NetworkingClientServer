@@ -17,17 +17,20 @@
 #include "game_logic.h"
 
 /// Create a player struct.
-/// \param socket       Socket number.
-/// \param nickname     Player nickname.
-/// \return             Player struct.
-player_t *player_create(int socket, char *nickname) {
-    player_t *p = memory_malloc(sizeof(player_t));
+/// \param connection_info  Connection info struct.
+/// \param nickname         Player nickname.
+/// \return                 Player struct.
+player_t *player_create(remote_connection_t *connection_info, char *nickname) {
+    player_t *p = memory_malloc(sizeof(player_t), 0);
 
-    p->nickname = memory_malloc(50 * sizeof(char));
+    p->nickname = memory_malloc(50 * sizeof(char), 0);
     sprintf(p->nickname, "%s", nickname);
 
+    p->client_addr = memory_malloc(connection_info->client_address_len * sizeof(char), 0);
+    sprintf(p->client_addr, "%s", connection_info->client_address);
+
     p->choice = 0;
-    p->socket = socket;
+    p->socket = connection_info->client_socket;
     p->is_disconnected = 0;
     p->id = svr_generate_id();
     p->next = NULL;
@@ -36,13 +39,20 @@ player_t *player_create(int socket, char *nickname) {
     return p;
 }
 
+/// Change player's socket to another.
+/// \param player   The player.
+/// \param socket   The socket.
+void player_change_socket(player_t *player, int socket) {
+    player->socket = socket;
+}
+
 /// Remove the player from the player list.
 /// \param player
 void player_remove(player_t *player) {
     if (!player)
         return;
 
-    char *id = memory_malloc(sizeof(char) * (19 + 1));
+    char *id = memory_malloc(sizeof(char) * (19 + 1), 0);
     strcpy(id, player->id);
     int socket = player->socket;
     int is_disconnected = player->is_disconnected;
@@ -53,7 +63,7 @@ void player_remove(player_t *player) {
 
     ptr = g_player_list;
 
-    log_message = memory_malloc(sizeof(char) * 256);
+    log_message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(log_message, "\t> Player %s (ID: %s) has disconnected!\n", player->nickname, player->id);
 
     pthread_mutex_lock(&g_player_list_mutex);
@@ -85,7 +95,7 @@ void player_remove(player_t *player) {
 
     pthread_mutex_unlock(&g_player_list_mutex);
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(message, "%s;disconnect_player\n", id); // Token message.
 
     if (is_disconnected != 1)
@@ -93,9 +103,9 @@ void player_remove(player_t *player) {
 
     write_log(log_message);
 
-    memory_free(log_message);
-    memory_free(message);
-    memory_free(id);
+    memory_free(log_message, 0);
+    memory_free(message, 0);
+    memory_free(id, 0);
 }
 
 /// Free all the needed memory space to be able to delete a pointer to the player without filled memory with its data. (Delete the player).
@@ -104,9 +114,10 @@ void _player_destroy(player_t *player) {
     if (!player)
         return;
 
-    memory_free(player->id);
-    memory_free(player->nickname);
-    memory_free(player);
+    memory_free(player->id, 0);
+    memory_free(player->nickname, 0);
+    memory_free(player->client_addr, 0);
+    memory_free(player, 0);
 }
 
 /// Find the player in the player list by ID.
@@ -125,6 +136,36 @@ player_t *player_find(char *id) {
 
         do {
             if (strcmp(player_ptr->id, id) == 0) {
+                pthread_mutex_unlock(&g_player_list_mutex);
+                return player_ptr;
+            }
+
+            player_ptr = player_ptr->next;
+
+        } while (player_ptr != NULL);
+    }
+
+    pthread_mutex_unlock(&g_player_list_mutex);
+
+    return NULL;
+}
+
+/// Find the player in the player list by Client addr.
+/// \param id       Client addr.
+/// \return         Pointer to player. Returns NULL if it fails.
+player_t *player_find_unknown_reconnect(char *client_addr) {
+    if (!client_addr)
+        return NULL;
+
+    player_t *player_ptr = NULL;
+
+    pthread_mutex_lock(&g_player_list_mutex);
+
+    if (g_player_list != NULL) {
+        player_ptr = g_player_list;
+
+        do {
+            if (player_ptr->is_disconnected == 1 && strcmp(player_ptr->client_addr, client_addr) == 0) {
                 pthread_mutex_unlock(&g_player_list_mutex);
                 return player_ptr;
             }
@@ -178,8 +219,9 @@ int player_connect_to_game(player_t *player, game_t *game) {
     char *log_message = NULL;
 
     // Check for reconnection.
-    for (i = 0; i < PLAYER_COUNT; ++i) {
-        if (player == game->players[i]) {
+    for (i = 0; i < game->player_count; ++i) {
+        printf("%s - %s\n", player->id, game->players[i]->id);
+        if (strcmp(player->id, game->players[i]->id) == 0) {
             is_reconnecting = 1;
             break;
         }
@@ -203,13 +245,13 @@ int player_connect_to_game(player_t *player, game_t *game) {
         game_logic_prepare_player_on_game_join(player); // Only for new players /We do not want to reset score to rejoined player f.e.
     }
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 256, 0);
     memset(message, 0, strlen(message));
     sprintf(message, "%s;prepare_window_for_game;%s;%s;%d\n", player->id, game->id, game->name,
             game->goal); // Token message.
     svr_send(player->socket, message, 0);
 
-    log_message = memory_malloc(sizeof(char) * 256);
+    log_message = memory_malloc(sizeof(char) * 256, 0);
     if (is_reconnecting)
         sprintf(log_message, "\t> Player %s (ID: %s) returned to the game (ID: %s).\n", player->nickname, player->id, game->id);
     else
@@ -221,10 +263,10 @@ int player_connect_to_game(player_t *player, game_t *game) {
         game_broadcast_update_games();
 
         if (game_start(game)) { // If the game cannot start a thread for it.
-            log_message = memory_malloc(sizeof(char) * 256);
+            log_message = memory_malloc(sizeof(char) * 256, 0);
             sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
             write_log(log_message);
-            memory_free(log_message);
+            memory_free(log_message, 0);
 
             for (j = 0; j < game->player_count; ++j) {
                 player_disconnect_from_game(game->players[j], game);
@@ -233,8 +275,8 @@ int player_connect_to_game(player_t *player, game_t *game) {
         }
     }
 
-    memory_free(message);
-    memory_free(log_message);
+    memory_free(message, 0);
+    memory_free(log_message, 0);
 
     return 0;
 }
@@ -266,14 +308,14 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
     game_broadcast_update_games();
 
     // Log.
-    log_message = memory_malloc(sizeof(char) * 256);
+    log_message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(log_message, "\t> Player: %s (ID: %s) has disconnected from the game %s (ID: %s)!\n", player->nickname,
             player->id, game->name, game->id);
     write_log(log_message);
-    memory_free(log_message);
+    memory_free(log_message, 0);
 
     // Send a message back to client.
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(message, "%s;leave_game\n", player->id); // Token message.
 
     // Do not disconnect the player who lost a connection.
@@ -288,7 +330,7 @@ void player_disconnect_from_game(player_t *player, game_t *game) {
         game_send_current_state_info(game);
     }
 
-    memory_free(message);
+    memory_free(message, 0);
 }
 
 /// Free al players.
@@ -307,6 +349,7 @@ void player_print() {
     if (g_player_list) {
         do {
             printf("Nickname: %s (ID: %s)\n", ptr->nickname, ptr->id);
+            //printf("DEBUG: Socket: %d, Client addr.: %s, Is Disconnected status: %d.\n", ptr->socket, ptr->client_addr, ptr->is_disconnected);
             ptr = ptr->next;
 
         } while (ptr);

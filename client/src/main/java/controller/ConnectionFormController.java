@@ -120,19 +120,19 @@ public class ConnectionFormController extends AContentController {
                         getWindowController().loadContent(WindowContent.LOBBY);
 
                     } else if (connStatus == -1) { // Reconnect.
-                        if (Client.SELF.gameId == null)
                             getWindowController().loadContent(WindowContent.LOBBY);
-                        else
                             Client.SELF.sendMessage(new Message("join_player_to_game")); // Token message.
 
                     } else { // Handle error.
                         switch (connStatus) {
                             case 2:
                                 inputErrorMessageT.setText("Wrong inputs!");
+                                break;
                             case 3:
                                 inputErrorMessageT.setText("An unspecified ERROR occurred while connecting!");
+                                break;
                             default:
-                                inputErrorMessageT.setText("Cannot connect to the server!");
+                                inputErrorMessageT.setText("Cannot connect to the server (" + connStatus + ")!");
                         }
 
                         inputErrorMessageT.setVisible(true);

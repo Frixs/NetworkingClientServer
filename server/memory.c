@@ -12,8 +12,9 @@ long m_current_allocation_count = 0;
 
  /// Custom malloc function for better debug memory allocation.
  /// \param size     Allocate memory of that size.
+ /// \param c        Constant for debugging. Default = 0;
  /// \return         Pointer to the location the memory.
-void *memory_malloc(size_t size) {
+void *memory_malloc(size_t size, int c) {
     if (!size)
         return NULL;
 
@@ -27,17 +28,24 @@ void *memory_malloc(size_t size) {
 
     m_current_allocation_count++;
 
+    if (c > 0)
+        printf("::: %d\n", c);
+
     return m;
 }
 
  /// Custom free function for better debug memory allocation.
  /// \param ptr      Free the pointer memory.
-void memory_free(void *ptr) {
+ /// \param c        Constant for debugging. Default = 0;
+void memory_free(void *ptr, int c) {
     if (!ptr)
         return;
 
     m_current_allocation_count--;
     free(ptr);
+
+    if (c > 0)
+        printf("::: %d\n", c);
 }
 
 /// Print status of the memory.

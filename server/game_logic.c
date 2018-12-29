@@ -34,7 +34,7 @@ void _game_logic_evaluate(game_t *g) {
 
     // Check winner.
     if ((p =_game_logic_check_winner(g))) {
-        message = memory_malloc(sizeof(char) * 256);
+        message = memory_malloc(sizeof(char) * 256, 0);
         sprintf(message, "%s;set_player_win;%s\n", p->id, p->nickname); // Token message.
         game_multicast(g, message);
 
@@ -48,7 +48,7 @@ void _game_logic_evaluate(game_t *g) {
     // Sleep due to client-friendly interaction.
     sleep(1);
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 256, 0);
     memset(message, 0, strlen(message));
     sprintf(message, "1;do_after_turn\n"); // Token message.
     game_multicast(g, message);

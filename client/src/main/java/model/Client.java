@@ -93,6 +93,7 @@ public class Client implements INetwork, Runnable {
         if (!Sanitize.SELF.checkString(nickname.trim(), true, true, true, new ArrayList<>()))
             return 2;
 
+        boolean isReconnecting = false;
         stopReceiving = false;
         reader = new Thread(this);
 
@@ -135,12 +136,14 @@ public class Client implements INetwork, Runnable {
             if ((message = in.readLine()) != null) {
                 String[] tokens = message.split(";");
 
-                if (tokens.length > 1 && tokens[1].compareTo("_player_id") == 0)
+                if (tokens.length > 1 && tokens[1].compareTo("_player_id") == 0) {
                     this.id = tokens[0].trim();
-                else if (tokens.length > 1 && tokens[1].compareTo("_player_id_reconnected") == 0)
-                    return -1; // Reconnected.
-                else
+                } else if (tokens.length > 1 && tokens[1].compareTo("_player_id_reconnected") == 0) {
+                    this.id = tokens[0].trim();
+                    isReconnecting = true;
+                } else {
                     return 3;
+                }
             }
 
             sendMessage(new Message("get_games")); // Token message.
@@ -153,7 +156,7 @@ public class Client implements INetwork, Runnable {
         reader.start();
 
         System.out.println("Connected to server (" + this.socket.getInetAddress().getHostAddress() + ") as " + nickname + "!");
-        return 0;
+        return isReconnecting ? -1 : 0;
     }
 
     @Override

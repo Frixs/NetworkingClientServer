@@ -8,11 +8,11 @@
 /// Custom malloc function for better debug memory allocation.
 /// \param size     Allocate memory of that size.
 /// \return         Pointer to the location the memory.
-void *memory_malloc(size_t size);
+void *memory_malloc(size_t size, int c);
 
 /// Custom free function for better debug memory allocation.
 /// \param ptr      Free the pointer memory.
-void memory_free(void *ptr);
+void memory_free(void *ptr, int c);
 
 /// Print status of the memory.
 void memory_print_status();

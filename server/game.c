@@ -45,7 +45,7 @@ void game_broadcast_update_games() {
     game_t *game_list_ptr = g_game_list;
     char *message = NULL;
 
-    message = memory_malloc(sizeof(char) * 1024);
+    message = memory_malloc(sizeof(char) * 1024, 0);
     memset(message, 0, strlen(message));
     sprintf(message, "1;update_games"); // Token message.
 
@@ -77,7 +77,7 @@ void game_send_update_players(game_t *game) {
     char *message = NULL;
     player_t *player = NULL;
 
-    message = memory_malloc(sizeof(char) * 1024);
+    message = memory_malloc(sizeof(char) * 1024, 0);
     memset(message, 0, strlen(message));
     sprintf(message, "1;update_players"); // Token message.
 
@@ -103,7 +103,7 @@ void game_send_current_state_info(game_t *game) {
     char *message = NULL;
     player_t *player = NULL;
 
-    message = memory_malloc(sizeof(char) * 256);
+    message = memory_malloc(sizeof(char) * 256, 0);
     memset(message, 0, strlen(message));
 
     for (i = 0; i < PLAYER_COUNT; ++i) {
@@ -148,11 +148,11 @@ void game_create(player_t *player, int goal) {
     int i;
     char *log_message = NULL;
 
-    game_t *game = memory_malloc(sizeof(game_t));
+    game_t *game = memory_malloc(sizeof(game_t), 0);
 
     game->id = svr_generate_id();
 
-    game->name = memory_malloc(sizeof(char) * (19 + 5 + 1));
+    game->name = memory_malloc(sizeof(char) * (19 + 5 + 1), 0);
     strcpy(game->name, "game-");
     strcat(game->name, game->id);
 
@@ -170,7 +170,7 @@ void game_create(player_t *player, int goal) {
     for (i = 0; i < PLAYER_COUNT; ++i)
         game->players[i] = NULL;
 
-    log_message = memory_malloc(sizeof(char) * 256);
+    log_message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(log_message, "\t> Game created (ID: %s)!\n", game->id);
     write_log(log_message);
 
@@ -178,7 +178,7 @@ void game_create(player_t *player, int goal) {
     player_connect_to_game(player, game);
     game_broadcast_update_games();
 
-    memory_free(log_message);
+    memory_free(log_message, 0);
 }
 
 /// It adds the game to the game list.
@@ -217,7 +217,7 @@ void game_remove(game_t *game) {
 
     ptr = g_game_list;
 
-    log_message = memory_malloc(sizeof(char) * 256);
+    log_message = memory_malloc(sizeof(char) * 256, 0);
     sprintf(log_message, "\t> Game removed (ID: %s)!\n", game->id);
 
     pthread_mutex_lock(&g_game_list_mutex);
@@ -252,7 +252,7 @@ void game_remove(game_t *game) {
     write_log(log_message);
     game_broadcast_update_games();
 
-    memory_free(log_message);
+    memory_free(log_message, 0);
 }
 
 /// Free all the needed memory space to be able to delete a pointer to the game without filled memory with its data. (Delete the game).
@@ -261,10 +261,10 @@ void _game_destroy(game_t *game) {
     if (!game)
         return;
 
-    memory_free(game->id);
-    memory_free(game->name);
+    memory_free(game->id, 0);
+    memory_free(game->name, 0);
     sem_destroy(&(game->sem_on_turn));
-    memory_free(game);
+    memory_free(game, 0);
 }
 
 /// Start the game thread.
@@ -277,10 +277,10 @@ int game_start(game_t *game) {
 
     if (!game || pthread_create(&thread_id, NULL, _game_serve, (void *) game)) {
         // Log.
-        log_message = memory_malloc(sizeof(char) * 256);
+        log_message = memory_malloc(sizeof(char) * 256, 0);
         sprintf(log_message, "\t> Fatal ERROR during creating a new thread!\n");
         write_log(log_message);
-        memory_free(log_message);
+        memory_free(log_message, 0);
         return 1;
     }
 
@@ -305,7 +305,7 @@ void game_multicast(game_t *game, char *message) {
         if (game->players[i] && game->players[i]->is_disconnected != 1)
             svr_send(game->players[i]->socket, message, 1);
 
-    memory_free(message);
+    memory_free(message, 0);
 }
 
 /// Serve the game.
@@ -326,11 +326,11 @@ void *_game_serve(void *arg) {
             // Update player data.
             game_send_update_players(game);
 
-            message = memory_malloc(sizeof(char) * 256);
+            message = memory_malloc(sizeof(char) * 256, 0);
             memset(message, 0, strlen(message));
             sprintf(message, "%s;on_turn\n", game->players[i]->id);
             svr_send(game->players[i]->socket, message, 0);
-            memory_free(message);
+            memory_free(message, 0);
         }
 
         // Wait until all players play.
