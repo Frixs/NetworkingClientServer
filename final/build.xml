@@ -24,7 +24,7 @@
 	<!-- value="ISO-8859-2" -->
 	<!-- properties menene temer nikdy -->
 	
-	<property name="zdrojove" value="java_src"/>
+	<property name="zdrojove" value="."/>
 	<property name="prelozene" value="java_bin"/>
 	<property name="dokumentace" value="doc"/>
 	<property name="distribuce" location="dist"/>
@@ -39,7 +39,7 @@
 	</target>
 	
 	<target name="ladeni" depends="preklad" >
-		<java classname="${balik}.${souborSMain}">
+		<java classname="main.java.core.${souborSMain}">
 			<classpath path="${prelozene}" />
 		</java>
 	</target>
@@ -64,15 +64,17 @@
 		<copy todir="${distribuce}/${dokumentace}">
 			<fileset dir="${dokumentace}"/>
 		</copy>
+		<copy todir="${distribuce}/main/resource">
+			<fileset dir="main/resource"/>
+		</copy>
 		
 		<copy file="build.xml" todir="${distribuce}"/>
-		<copy file="board.jpg" todir="${distribuce}"/>
 		
 
 		<jar destfile="${distribucniJAR}.jar" basedir="${distribuce}">
 
 			<manifest>
-				<attribute name="Main-Class" value="${balik}.${souborSMain}"/>
+				<attribute name="Main-Class" value="main.java.core.${souborSMain}"/>
 			</manifest>
 			
 		</jar>
